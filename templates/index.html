@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
-{% block title %}Bear Paw Café — Order Online{% endblock %}
+{% block title %}The Bear Paw Deli — Order Online{% endblock %}
 
 {% block content %}
 <section class="hero">
   <div class="container">
-    <div class="hero-badge">Order Online · Pick Up Fresh</div>
-    <h1>🐾 Bear Paw Café</h1>
-    <p>Artisan sandwiches, wraps &amp; daily specials. Order ahead and skip the queue.</p>
+    <div class="hero-eyebrow">Order ahead · Skip the queue</div>
+    <h1>The Bear Paw Deli</h1>
+    <p>Fresh sandwiches, breakfast rolls & daily specials from our Wicklow delis. Order online, collect in store.</p>
   </div>
 </section>
 
@@ -14,14 +14,31 @@
   <div class="container">
     <p class="section-label">Choose your location</p>
     <div class="shops-grid">
-      {% for shop_id, shop in shops.items() %}
-      <a href="{{ url_for('menu', shop=shop_id) }}" class="shop-card">
+
+      <a href="{{ url_for('menu', shop='greystones') }}" class="shop-card">
         <span class="shop-icon">🏡</span>
-        <h2>{{ shop.name }}</h2>
-        <address>{{ shop.address }}</address>
-        <span class="shop-cta">View Menu →</span>
+        <h2>Greystones</h2>
+        <address>Theatre Lane, Rathdown Lower<br>Greystones, Co. Wicklow</address>
+        <div class="shop-hours">Mon–Sat 07:30–15:00 &nbsp;·&nbsp; Sun closed</div>
+        <span class="shop-cta">View Menu</span>
       </a>
-      {% endfor %}
+
+      <a href="{{ url_for('menu', shop='delgany') }}" class="shop-card">
+        <span class="shop-icon">🏡</span>
+        <h2>Delgany</h2>
+        <address>Main Street, Delgany<br>Co. Wicklow</address>
+        <div class="shop-hours">Mon–Fri 07:30–15:00 &nbsp;·&nbsp; Sat–Sun 08:00–15:00</div>
+        <span class="shop-cta">View Menu</span>
+      </a>
+
+      <a href="{{ url_for('menu', shop='enniskerry') }}" class="shop-card">
+        <span class="shop-icon">🏡</span>
+        <h2>Enniskerry</h2>
+        <address>Enniskerry Village, Kilgarran<br>Co. Wicklow</address>
+        <div class="shop-hours">Mon–Sun 07:30–16:00</div>
+        <span class="shop-cta">View Menu</span>
+      </a>
+
     </div>
   </div>
 </section>

@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Bear Paw Café{% endblock %}</title>
+  <title>{% block title %}The Bear Paw Deli{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   {% block head %}{% endblock %}
 </head>
@@ -12,13 +15,15 @@
 <header class="header">
   <div class="container">
     <a href="{{ url_for('index') }}" class="logo">
-      <span class="logo-icon">🐾</span>
-      <span class="logo-text">Bear Paw</span>
+      <span class="logo-wordmark">
+        The Bear Paw Deli
+        <em>Greystones · Delgany · Enniskerry</em>
+      </span>
     </a>
     <nav class="nav">
       {% if cart_count > 0 %}
       <a href="{{ url_for('cart_page') }}" class="nav-cart">
-        <span>🛒</span>
+        <span>Basket</span>
         <span class="cart-badge">{{ cart_count }}</span>
       </a>
       {% endif %}
@@ -38,7 +43,7 @@
 
 <footer class="footer">
   <div class="container">
-    <p>© 2024 Bear Paw Café &nbsp;·&nbsp; Delgany &nbsp;·&nbsp; Enniskerry &nbsp;·&nbsp; Greystones</p>
+    <p>© 2024 The Bear Paw Deli &nbsp;·&nbsp; yummy@thebearpawdeli.com</p>
   </div>
 </footer>
 

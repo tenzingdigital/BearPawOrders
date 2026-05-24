@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ shop_info.name }} Menu — Bear Paw Café{% endblock %}
+{% block title %}{{ shop_info.name }} Menu — The Bear Paw Deli{% endblock %}
 {% block body_attrs %}data-shop="{{ shop }}"{% endblock %}
 
 {% block content %}
@@ -8,12 +8,12 @@
     <div class="menu-header-inner">
       <div>
         <a href="{{ url_for('index') }}" class="back-link">← All locations</a>
-        <h1>Bear Paw {{ shop_info.name }}</h1>
+        <h1>{{ shop_info.name }}</h1>
         <p>{{ shop_info.address }} &nbsp;·&nbsp; {{ shop_info.phone }}</p>
       </div>
       {% if cart_count > 0 %}
-      <a href="{{ url_for('cart_page') }}" class="nav-cart" style="text-decoration:none">
-        🛒 <span class="cart-badge">{{ cart_count }}</span>
+      <a href="{{ url_for('cart_page') }}" class="nav-cart">
+        Basket <span class="cart-badge">{{ cart_count }}</span>
       </a>
       {% endif %}
     </div>
@@ -26,37 +26,63 @@
     {% if cart_shop_conflict %}
     <div class="conflict-banner" id="conflict-banner">
       <span class="conflict-banner-text">
-        ⚠️ Your cart has items from <strong>{{ shops[cart.shop].name }}</strong>.
-        Switching shop will clear your current cart.
+        Your basket has items from <strong>{{ shops[cart.shop].name }}</strong>.
+        Switching location will clear it.
       </span>
-      <button class="conflict-clear-btn" id="clear-conflict">Clear cart &amp; continue</button>
+      <button class="conflict-clear-btn" id="clear-conflict">Clear &amp; continue</button>
     </div>
     {% endif %}
 
-    {% for category, items in menu.items() %}
-    <div class="menu-category">
-      <h2 class="category-title">{{ category }}</h2>
-      <div class="menu-items-grid">
-        {% for item in items %}
-        <div class="menu-item-card{% if item.get('popular') %} popular{% endif %}">
-          {% if item.get('popular') %}
-          <span class="popular-ribbon">Popular</span>
-          {% endif %}
-          <div class="menu-item-info">
-            <div class="menu-item-name">{{ item.name }}</div>
-            <div class="menu-item-desc">{{ item.description }}</div>
+    {% for cat in categories %}
+      {% if cat.items %}
+      <div class="menu-category">
+        <h2 class="category-title">{{ cat.name }}</h2>
+        <div class="menu-items-grid">
+          {% for item in cat.items %}
+          <div class="menu-item-card">
+            <div class="menu-item-info">
+              <div class="menu-item-name">{{ item.name }}</div>
+              {% if item.description %}
+              <div class="menu-item-desc">{{ item.description }}</div>
+              {% endif %}
+              <div class="dietary-badges">
+                {% if item.dietary is defined %}
+                  {% if 'vegan' in item.dietary %}
+                    <span class="badge badge-vegan">Vegan</span>
+                  {% elif 'vegetarian' in item.dietary %}
+                    <span class="badge badge-veg">Vegetarian</span>
+                  {% endif %}
+                {% endif %}
+              </div>
+              {% if item.allergens and item.allergens | length > 0 %}
+              <div class="allergen-line">
+                Contains: {{ item.allergens | map('string') | map('lower') | join(', ') }}
+                &nbsp;<span title="{{ item.allergens | map('string') | map(attribute=allergen_key.__getitem__) | join(', ') }}"
+                            style="cursor:help;text-decoration:underline dotted">allergen info</span>
+              </div>
+              {% endif %}
+            </div>
+            <div class="menu-item-right">
+              <span class="menu-item-price">€{{ "%.2f"|format(item.price) }}</span>
+              <button class="add-btn"
+                      data-item-id="{{ item.id }}"
+                      data-name="{{ item.name }}">Add to basket</button>
+            </div>
           </div>
-          <div class="menu-item-right">
-            <span class="menu-item-price">€{{ "%.2f"|format(item.price) }}</span>
-            <button class="add-btn"
-                    data-item-id="{{ item.id }}"
-                    data-name="{{ item.name }}">Add to cart</button>
-          </div>
+          {% endfor %}
         </div>
-        {% endfor %}
       </div>
-    </div>
+      {% elif cat.note %}
+      <div class="menu-category">
+        <h2 class="category-title">{{ cat.name }}</h2>
+        <div class="drinks-note">☕ {{ cat.note }}</div>
+      </div>
+      {% endif %}
     {% endfor %}
+
+    <p style="font-size:.75rem;color:var(--mid);margin-top:24px;letter-spacing:.03em">
+      Allergen information available on request. Please inform staff of any allergies when ordering.
+    </p>
 
   </div>
 </div>

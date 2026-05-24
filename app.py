@@ -1,3 +1,4 @@
+import json
 import os
 import uuid
 from datetime import datetime, timedelta
@@ -15,49 +16,45 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
-SHOPS = {
-    'delgany':     {'name': 'Delgany',     'address': 'Main Street, Delgany, Co. Wicklow',     'phone': '01 234 5678'},
-    'enniskerry':  {'name': 'Enniskerry',  'address': 'The Square, Enniskerry, Co. Wicklow',   'phone': '01 234 5679'},
-    'greystones':  {'name': 'Greystones',  'address': 'Church Road, Greystones, Co. Wicklow',  'phone': '01 234 5680'},
-}
+# ── Load menu data ────────────────────────────────────────────────────────────
 
+_menu_path = os.path.join(os.path.dirname(__file__), 'bearpaw-menu.json')
+with open(_menu_path) as f:
+    _data = json.load(f)
+
+BRAND        = _data['brand']
+ALLERGEN_KEY = _data['allergenKey']
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'bearpaw2024')
 
-MENU = {
-    'Classics': [
-        {'id': 'blt',       'name': 'BLT',           'price': 7.50,  'description': 'Crispy bacon, fresh lettuce, vine tomato on sourdough', 'popular': True},
-        {'id': 'club',      'name': 'Club Sandwich',  'price': 9.00,  'description': 'Triple decker with chicken, bacon, egg, lettuce & tomato'},
-        {'id': 'tuna-melt', 'name': 'Tuna Melt',      'price': 8.50,  'description': 'Atlantic tuna mayo, melted mature cheddar on white'},
-        {'id': 'ham-cheese','name': 'Ham & Cheese',   'price': 7.50,  'description': 'Honey glazed ham, mature cheddar, wholegrain mustard'},
-        {'id': 'egg-mayo',  'name': 'Egg Mayo',        'price': 6.50,  'description': 'Free range egg mayo, watercress, cracked black pepper'},
-    ],
-    'Hot Sandwiches': [
-        {'id': 'hot-chicken',    'name': 'Hot Press Chicken', 'price': 9.50,  'description': 'Grilled chicken, basil pesto, sun-dried tomato, mozzarella', 'popular': True},
-        {'id': 'steak-ciabatta', 'name': 'Steak Ciabatta',   'price': 12.50, 'description': 'Sirloin steak strips, caramelised onions, horseradish, rocket'},
-        {'id': 'meatball-sub',   'name': 'Meatball Sub',      'price': 10.00, 'description': 'Beef meatballs, marinara sauce, grated parmesan'},
-        {'id': 'pulled-pork',    'name': 'Pulled Pork Roll',  'price': 10.50, 'description': '12hr slow cooked pork, apple slaw, BBQ sauce'},
-    ],
-    'Wraps': [
-        {'id': 'caesar-wrap',  'name': 'Caesar Chicken Wrap', 'price': 8.50,  'description': 'Grilled chicken, romaine, parmesan, Caesar dressing'},
-        {'id': 'falafel-wrap', 'name': 'Falafel & Hummus',    'price': 8.00,  'description': 'Crispy falafel, hummus, tabbouleh, tzatziki, pickled red onion'},
-        {'id': 'prawn-wrap',   'name': 'Prawn Marie Rose',    'price': 9.50,  'description': 'Tiger prawns, marie rose, avocado, gem lettuce'},
-        {'id': 'bbq-beef',     'name': 'BBQ Beef Wrap',       'price': 9.50,  'description': 'Pulled beef brisket, BBQ sauce, jalapeños, red onion, cheddar'},
-    ],
-    'Bear Paw Specials': [
-        {'id': 'bear-special', 'name': 'Bear Paw Special',  'price': 11.00, 'description': "Today's signature creation — ask at the counter for today's filling!", 'popular': True},
-        {'id': 'smashed-avo',  'name': 'Smashed Avo & Egg', 'price': 10.00, 'description': 'Sourdough, smashed avocado, poached egg, feta, chilli flakes'},
-        {'id': 'caprese',      'name': 'Caprese Stack',      'price': 9.50,  'description': 'Buffalo mozzarella, heirloom tomato, fresh basil, aged balsamic'},
-    ],
+SHOPS = {
+    loc['id']: {
+        'name':    loc['name'],
+        'address': loc['address'],
+        'phone':   loc['phone'],
+        'hours':   loc['hours'],
+    }
+    for loc in _data['locations']
 }
 
-ALL_ITEMS = {
-    item['id']: {**item, 'category': cat}
-    for cat, items in MENU.items()
-    for item in items
-}
+# Per-location menus: { shop_id: [category_dict, ...] }
+MENUS = {loc['id']: loc['menu']['categories'] for loc in _data['locations']}
 
 
-# ── Models ──────────────────────────────────────────────────────────────────
+def get_shop_item(shop, item_id):
+    for cat in MENUS.get(shop, []):
+        for item in cat.get('items', []):
+            if item.get('id') == item_id:
+                return {**item, 'category': cat['name']}
+    return None
+
+
+def allergen_names(codes):
+    if not isinstance(codes, list):
+        return []
+    return [ALLERGEN_KEY.get(str(c), str(c)) for c in codes]
+
+
+# ── Models ────────────────────────────────────────────────────────────────────
 
 class Order(db.Model):
     id             = db.Column(db.String(8),   primary_key=True)
@@ -66,7 +63,7 @@ class Order(db.Model):
     customer_email = db.Column(db.String(100), nullable=False)
     customer_phone = db.Column(db.String(20),  nullable=True)
     pickup_time    = db.Column(db.String(50),  nullable=False)
-    payment_method = db.Column(db.String(20),  nullable=False)  # 'pickup' | 'advance'
+    payment_method = db.Column(db.String(20),  nullable=False)
     payment_status = db.Column(db.String(20),  default='pending')
     status         = db.Column(db.String(20),  default='received')
     notes          = db.Column(db.Text,        nullable=True)
@@ -114,7 +111,7 @@ class OrderItem(db.Model):
         }
 
 
-# ── Cart helpers ─────────────────────────────────────────────────────────────
+# ── Cart helpers ──────────────────────────────────────────────────────────────
 
 def get_cart():
     return session.get('cart', {'shop': None, 'items': []})
@@ -130,12 +127,12 @@ def cart_count(cart):
     return sum(i['quantity'] for i in cart['items'])
 
 
-# ── Customer routes ──────────────────────────────────────────────────────────
+# ── Customer routes ───────────────────────────────────────────────────────────
 
 @app.route('/')
 def index():
     cart = get_cart()
-    return render_template('index.html', shops=SHOPS, cart_count=cart_count(cart))
+    return render_template('index.html', shops=SHOPS, brand=BRAND, cart_count=cart_count(cart))
 
 
 @app.route('/menu/<shop>')
@@ -146,9 +143,12 @@ def menu(shop):
     conflict = cart['shop'] and cart['shop'] != shop and bool(cart['items'])
     return render_template('menu.html',
                            shop=shop, shop_info=SHOPS[shop],
-                           menu=MENU, cart=cart,
+                           categories=MENUS[shop],
+                           allergen_key=ALLERGEN_KEY,
+                           cart=cart,
                            cart_count=cart_count(cart),
-                           cart_shop_conflict=conflict)
+                           cart_shop_conflict=conflict,
+                           shops=SHOPS)
 
 
 @app.route('/cart/add', methods=['POST'])
@@ -158,15 +158,18 @@ def add_to_cart():
     shop      = data.get('shop')
     item_note = data.get('notes', '')
 
-    if item_id not in ALL_ITEMS or shop not in SHOPS:
-        return jsonify({'success': False, 'error': 'Invalid item or shop'}), 400
+    if shop not in SHOPS:
+        return jsonify({'success': False, 'error': 'Invalid shop'}), 400
+
+    item = get_shop_item(shop, item_id)
+    if not item:
+        return jsonify({'success': False, 'error': 'Item not found'}), 400
 
     cart = get_cart()
     if cart['shop'] and cart['shop'] != shop:
         cart = {'shop': shop, 'items': []}
     cart['shop'] = shop
 
-    item = ALL_ITEMS[item_id]
     for ci in cart['items']:
         if ci['id'] == item_id and ci.get('notes', '') == item_note:
             ci['quantity'] += 1
@@ -292,7 +295,7 @@ def confirmation(order_id):
     return render_template('confirmation.html', order=order, shop_info=shop_info, cart_count=0)
 
 
-# ── Admin routes ─────────────────────────────────────────────────────────────
+# ── Admin routes ──────────────────────────────────────────────────────────────
 
 @app.route('/admin/<shop>')
 def admin_login(shop):
@@ -352,7 +355,7 @@ def admin_logout():
     return redirect(url_for('index'))
 
 
-# ── SocketIO ─────────────────────────────────────────────────────────────────
+# ── SocketIO ──────────────────────────────────────────────────────────────────
 
 @socketio.on('join_shop')
 def on_join_shop(data):
@@ -362,7 +365,7 @@ def on_join_shop(data):
         emit('joined', {'shop': shop})
 
 
-# ── Bootstrap ────────────────────────────────────────────────────────────────
+# ── Bootstrap ─────────────────────────────────────────────────────────────────
 
 if __name__ == '__main__':
     with app.app_context():

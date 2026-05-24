@@ -1,0 +1,122 @@
+{
+  "brand": {
+    "name": "The Bear Paw Deli & Catering",
+    "website": "https://www.thebearpawdeli.com",
+    "logo": "https://images.squarespace-cdn.com/content/v1/68bfea956920c4471badfda5/6c239fe0-2c8b-428d-831b-616208fc0d92/horizontal.png?format=1500w",
+    "email": "yummy@thebearpawdeli.com"
+  },
+  "allergenKey": {
+    "1": "Gluten", "2": "Crustaceans", "3": "Eggs", "4": "Fish",
+    "5": "Peanuts", "6": "Soybeans", "7": "Milk/Dairy", "8": "Nuts",
+    "9": "Celery", "10": "Mustard", "11": "Sesame", "12": "Sulphites",
+    "13": "Lupin", "14": "Molluscs"
+  },
+  "locations": [
+    {
+      "id": "greystones", "name": "Greystones",
+      "address": "Theatre Lane, Rathdown Lower, Greystones, Co. Wicklow",
+      "phone": "086 775 6219",
+      "hours": { "monday": "07:30-15:00", "tuesday": "07:30-15:00", "wednesday": "07:30-15:00", "thursday": "07:30-15:00", "friday": "07:30-15:00", "saturday": "07:30-15:00", "sunday": "closed" },
+      "menu": { "categories": [
+        { "id": "hot-sandwiches", "name": "Sandwiches", "items": [
+          { "id": "the-goat", "name": "The Goat", "description": "Roasted Courgette, goats cheese, basil pesto, rocket on a ciabatta", "price": 9.00, "allergens": [1,3,7], "dietary": ["vegetarian"] },
+          { "id": "toastie", "name": "Toastie", "description": "Honey Baked Ham, Wicklow Cheddar and Tomato Relish Toastie toasted on sour dough", "price": 9.00, "allergens": [1,3,7] },
+          { "id": "chicken-flatbread", "name": "Chicken Flatbread", "description": "Chicken Salad & Jalapeno, Cheddar Toasted Homemade Flatbread", "price": 9.50, "allergens": [] },
+          { "id": "big-kevs-reuben", "name": "Big Kev's Reuben", "description": "Kev's homemade pastrami with house kraut, pickle, Swiss cheese and Russian dressing toasted on sour dough", "price": 12.00, "allergens": [] },
+          { "id": "the-grizzly", "name": "The Grizzly", "description": "Slow braised brisket, melted cheddar, slaw & rocket", "price": 12.00, "allergens": [1,3,7] },
+          { "id": "greystones-roast-chicken", "name": "Greystones Roast Chicken", "description": "Roast Chicken, caramelised onions, rocket & aioli with crispy chicken skin on bread/flatbread/roll, with gravy", "price": 11.50, "allergens": [1,3] }
+        ]},
+        { "id": "breakfast-rolls", "name": "Breakfast Rolls", "items": [
+          { "id": "traditional-breakfast-roll", "name": "Traditional Breakfast Roll", "price": 9.00, "allergens": [1,3,7,9,12] },
+          { "id": "veggie-breakfast-roll", "name": "Veggie Breakfast Roll", "price": 9.00, "allergens": [1,3,7], "dietary": ["vegetarian"] },
+          { "id": "blt", "name": "BLT", "price": 9.00, "allergens": [1,3,12] }
+        ]},
+        { "id": "cold-sandwiches", "name": "Cold Sandwiches", "items": [
+          { "id": "ham-cheddar", "name": "Ham & Wicklow Cheddar", "price": 8.50, "allergens": [1,3,7] },
+          { "id": "ham-slaw", "name": "Ham & House Slaw", "price": 8.50, "allergens": [1,3,7] },
+          { "id": "turkey-swiss-pickle", "name": "Turkey, Swiss & Pickle", "price": 8.50, "allergens": [1,3,7] },
+          { "id": "vegan-hummus", "name": "Vegan Hummus, Tomato, Avocado & Pickle", "price": 8.50, "allergens": [1,11], "dietary": ["vegan","vegetarian"] },
+          { "id": "wicklow-cheddar-slaw", "name": "Wicklow Cheddar, House Slaw & Rocket", "price": 8.50, "allergens": [1,11], "dietary": ["vegetarian"] },
+          { "id": "coronation-chicken-roll", "name": "Coronation Chicken Roll", "price": 9.00, "allergens": [3,7,12] }
+        ]},
+        { "id": "salads-soups", "name": "Salads & Soups", "items": [
+          { "id": "veggie-salad", "name": "Veggie Salad", "price": 9.50, "allergens": [6,7,8,9,10,11], "dietary": ["vegetarian"] },
+          { "id": "chicken-caesar-salad", "name": "Chicken Caesar Salad", "price": 9.50, "allergens": [1,3,7,12] },
+          { "id": "soup-of-the-day", "name": "Soup of the Day", "price": 4.25, "allergens": [] },
+          { "id": "granola-yoghurt-pot", "name": "Granola Yoghurt Pot", "price": 5.00, "allergens": [1,3,7,8,11,12], "dietary": ["vegetarian"] }
+        ]},
+        { "id": "drinks", "name": "Drinks", "note": "Selection of coffees, teas and cold drinks — ask in store", "items": [] }
+      ]}
+    },
+    {
+      "id": "delgany", "name": "Delgany",
+      "address": "Main Street, Delgany, Co. Wicklow", "phone": "01 201 6006",
+      "hours": { "monday": "07:30-15:00", "tuesday": "07:30-15:00", "wednesday": "07:30-15:00", "thursday": "07:30-15:00", "friday": "07:30-15:00", "saturday": "08:00-15:00", "sunday": "08:00-15:00" },
+      "menu": { "categories": [
+        { "id": "hot-sandwiches", "name": "Sandwiches", "items": [
+          { "id": "the-goat", "name": "The Goat", "description": "Roasted Courgette, goats cheese, basil pesto, rocket on a ciabatta", "price": 9.00, "allergens": [1,3,7], "dietary": ["vegetarian"] },
+          { "id": "toastie", "name": "Toastie", "description": "Honey Baked Ham, Wicklow Cheddar and Tomato Relish on sour dough", "price": 9.00, "allergens": [1,3,7] },
+          { "id": "chicken-flatbread", "name": "Chicken Flatbread", "description": "Chicken Salad & Jalapeno, Cheddar Toasted Homemade Flatbread", "price": 9.50, "allergens": [] },
+          { "id": "big-kevs-reuben", "name": "Big Kev's Reuben", "description": "Kev's homemade pastrami with house kraut, pickle, Swiss cheese and Russian dressing toasted on sour dough", "price": 12.00, "allergens": [] },
+          { "id": "the-grizzly", "name": "The Grizzly", "description": "Slow braised brisket, melted cheddar, slaw & rocket", "price": 12.00, "allergens": [1,3,7] },
+          { "id": "nats-roast-chicken", "name": "Nat's Roast Chicken", "description": "Roast Chicken, caramelised onions, melted brie, rocket & aioli on brioche, with gravy", "price": 11.50, "allergens": [1,3] }
+        ]},
+        { "id": "breakfast-rolls", "name": "Breakfast Rolls", "items": [
+          { "id": "traditional-breakfast-roll", "name": "Traditional Breakfast Roll", "price": 9.00, "allergens": [1,3,7,9,12] },
+          { "id": "veggie-breakfast-roll", "name": "Veggie Breakfast Roll", "price": 9.00, "allergens": [1,3,7], "dietary": ["vegetarian"] },
+          { "id": "blt", "name": "BLT", "price": 9.00, "allergens": [1,3,12] }
+        ]},
+        { "id": "cold-sandwiches", "name": "Cold Sandwiches", "items": [
+          { "id": "ham-cheddar", "name": "Ham & Wicklow Cheddar", "price": 8.50, "allergens": [1,3,7] },
+          { "id": "ham-slaw", "name": "Ham & House Slaw", "price": 8.50, "allergens": [1,3,7] },
+          { "id": "turkey-swiss-pickle", "name": "Turkey, Swiss & Pickle", "price": 8.50, "allergens": [1,3,7] },
+          { "id": "vegan-hummus", "name": "Vegan Hummus, Tomato, Avocado & Pickle", "price": 8.50, "allergens": [1,11], "dietary": ["vegan","vegetarian"] },
+          { "id": "wicklow-cheddar-slaw", "name": "Wicklow Cheddar, House Slaw & Rocket", "price": 8.50, "allergens": [1,11], "dietary": ["vegetarian"] },
+          { "id": "coronation-chicken-roll", "name": "Coronation Chicken Roll", "price": 9.00, "allergens": [3,7,12] }
+        ]},
+        { "id": "salads-soups", "name": "Salads & Soups", "items": [
+          { "id": "veggie-salad", "name": "Veggie Salad", "price": 9.50, "allergens": [6,7,8,9,10,11], "dietary": ["vegetarian"] },
+          { "id": "chicken-caesar-salad", "name": "Chicken Caesar Salad", "price": 9.50, "allergens": [1,3,7,12] },
+          { "id": "soup-of-the-day", "name": "Soup of the Day", "price": 4.25, "allergens": [] },
+          { "id": "granola-yoghurt-pot", "name": "Granola Yoghurt Pot", "price": 5.00, "allergens": [1,3,7,8,11,12], "dietary": ["vegetarian"] }
+        ]},
+        { "id": "drinks", "name": "Drinks", "note": "Selection of coffees and cold drinks — ask in store", "items": [] }
+      ]}
+    },
+    {
+      "id": "enniskerry", "name": "Enniskerry",
+      "address": "Enniskerry Village, Kilgarran, Church Hill, Co. Wicklow", "phone": "01 273 4785",
+      "hours": { "monday": "07:30-16:00", "tuesday": "07:30-16:00", "wednesday": "07:30-16:00", "thursday": "07:30-16:00", "friday": "07:30-16:00", "saturday": "07:30-16:00", "sunday": "07:30-16:00" },
+      "menu": { "categories": [
+        { "id": "hot-sandwiches", "name": "Sandwiches", "items": [
+          { "id": "the-goat", "name": "The Goat", "description": "Roasted Courgette, goats cheese, basil pesto, rocket on a ciabatta", "price": 9.00, "allergens": [1,3,7], "dietary": ["vegetarian"] },
+          { "id": "toastie", "name": "Toastie", "description": "Honey Baked Ham, Wicklow Cheddar and Tomato Relish on sour dough", "price": 9.00, "allergens": [1,3,7] },
+          { "id": "chicken-flatbread", "name": "Chicken Flatbread", "description": "Chicken Salad & Jalapeno, Cheddar Toasted Homemade Flatbread", "price": 9.50, "allergens": [] },
+          { "id": "big-kevs-reuben", "name": "Big Kev's Reuben", "description": "Kev's homemade pastrami with house kraut, pickle, Swiss cheese and Russian dressing toasted on sour dough", "price": 12.00, "allergens": [] },
+          { "id": "the-grizzly", "name": "The Grizzly", "description": "Slow braised brisket, melted cheddar, slaw & rocket", "price": 12.00, "allergens": [1,3,7] },
+          { "id": "nats-roast-chicken", "name": "Nat's Roast Chicken", "description": "Roast Chicken, caramelised onions, melted brie, rocket & aioli on brioche, with gravy", "price": 11.50, "allergens": [1,3] }
+        ]},
+        { "id": "breakfast-rolls", "name": "Breakfast Rolls", "items": [
+          { "id": "traditional-breakfast-roll", "name": "Traditional Breakfast Roll", "price": 9.00, "allergens": [1,3,7,9,12] },
+          { "id": "veggie-breakfast-roll", "name": "Veggie Breakfast Roll", "price": 9.00, "allergens": [1,3,7], "dietary": ["vegetarian"] },
+          { "id": "blt", "name": "BLT", "price": 9.00, "allergens": [1,3,12] }
+        ]},
+        { "id": "cold-sandwiches", "name": "Cold Sandwiches", "items": [
+          { "id": "ham-cheddar", "name": "Ham & Wicklow Cheddar", "price": 8.50, "allergens": [1,3,7] },
+          { "id": "ham-slaw", "name": "Ham & House Slaw", "price": 8.50, "allergens": [1,3,7] },
+          { "id": "turkey-swiss-pickle", "name": "Turkey, Swiss & Pickle", "price": 8.50, "allergens": [1,3,7] },
+          { "id": "vegan-hummus", "name": "Vegan Hummus, Tomato, Avocado & Pickle", "price": 8.50, "allergens": [1,11], "dietary": ["vegan","vegetarian"] },
+          { "id": "wicklow-cheddar-slaw", "name": "Wicklow Cheddar, House Slaw & Rocket", "price": 8.50, "allergens": [1,11], "dietary": ["vegetarian"] },
+          { "id": "coronation-chicken-roll", "name": "Coronation Chicken Roll", "price": 9.00, "allergens": [3,7,12] }
+        ]},
+        { "id": "salads-soups", "name": "Salads & Soups", "items": [
+          { "id": "veggie-salad", "name": "Veggie Salad", "price": 9.50, "allergens": [6,7,8,9,10,11], "dietary": ["vegetarian"] },
+          { "id": "chicken-caesar-salad", "name": "Chicken Caesar Salad", "price": 9.50, "allergens": [1,3,7,12] },
+          { "id": "soup-of-the-day", "name": "Soup of the Day", "price": 4.25, "allergens": [] },
+          { "id": "granola-yoghurt-pot", "name": "Granola Yoghurt Pot", "price": 5.00, "allergens": [1,3,7,8,11,12], "dietary": ["vegetarian"] }
+        ]},
+        { "id": "drinks", "name": "Drinks", "note": "Selection of coffees and cold drinks — ask in store", "items": [] }
+      ]}
+    }
+  ]
+}
