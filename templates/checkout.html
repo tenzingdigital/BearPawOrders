@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% block title %}Checkout — Bear Paw Café{% endblock %}
+
+{% block content %}
+<div style="background:var(--navy);padding:28px 0">
+  <div class="container">
+    <a href="{{ url_for('cart_page') }}" class="back-link">← Back to cart</a>
+    <h1 style="color:#fff;font-size:1.6rem;font-weight:700;margin-top:8px">Checkout</h1>
+    <p style="color:rgba(255,255,255,.55);font-size:.88rem;margin-top:4px">Bear Paw {{ shop_info.name }}</p>
+  </div>
+</div>
+
+<div class="checkout-content">
+  <div class="container">
+    <div class="checkout-layout">
+
+      <!-- Form -->
+      <form id="checkout-form" method="POST" action="{{ url_for('checkout') }}">
+
+        <div class="checkout-form-card">
+
+          <!-- Your details -->
+          <div class="form-section">
+            <h3>Your Details</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Name <span class="required">*</span></label>
+                <input class="form-control" type="text" name="name" required
+                       value="{{ form_data.get('name','') }}" placeholder="Jane Smith">
+              </div>
+              <div class="form-group">
+                <label>Phone</label>
+                <input class="form-control" type="tel" name="phone"
+                       value="{{ form_data.get('phone','') }}" placeholder="085 123 4567">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Email <span class="required">*</span></label>
+              <input class="form-control" type="email" name="email" required
+                     value="{{ form_data.get('email','') }}" placeholder="jane@example.com">
+            </div>
+          </div>
+
+          <!-- Pickup time -->
+          <div class="form-section">
+            <h3>Pickup Time</h3>
+            <div class="form-group">
+              <label>Estimated pickup <span class="required">*</span></label>
+              <select class="form-control" name="pickup_time" required>
+                <option value="" disabled selected>Select a time…</option>
+                {% for opt in pickup_options %}
+                <option value="{{ opt.value }}"
+                  {% if form_data.get('pickup_time') == opt.value %}selected{% endif %}>
+                  {{ opt.label }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <!-- Payment -->
+          <div class="form-section">
+            <h3>Payment Method</h3>
+            <div class="payment-options">
+              <label class="payment-option">
+                <input type="radio" name="payment_method" value="pickup"
+                       {% if form_data.get('payment_method','pickup') == 'pickup' %}checked{% endif %}>
+                <span class="payment-card">
+                  <span class="payment-icon">💳</span>
+                  <span class="payment-title">Pay on Collection</span>
+                  <span class="payment-desc">Cash or card at the counter when you pick up</span>
+                </span>
+              </label>
+              <label class="payment-option">
+                <input type="radio" name="payment_method" value="advance"
+                       {% if form_data.get('payment_method') == 'advance' %}checked{% endif %}>
+                <span class="payment-card">
+                  <span class="payment-icon">📱</span>
+                  <span class="payment-title">Pay in Advance</span>
+                  <span class="payment-desc">Reserve your order — pay online now</span>
+                </span>
+              </label>
+            </div>
+
+            <div id="advance-note" style="display:{% if form_data.get('payment_method') == 'advance' %}block{% else %}none{% endif %};
+                 margin-top:14px;background:var(--cream);border-radius:var(--radius-sm);
+                 padding:14px 16px;font-size:.85rem;color:var(--warm-gray)">
+              💡 <strong>Demo mode:</strong> No payment is charged. Your order will be marked as paid and reserved.
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div class="form-section" style="margin-bottom:0">
+            <h3>Order Notes</h3>
+            <div class="form-group" style="margin-bottom:0">
+              <label>Anything to let us know? (optional)</label>
+              <textarea class="form-control" name="notes"
+                        placeholder="Allergies, special requests…">{{ form_data.get('notes','') }}</textarea>
+            </div>
+          </div>
+
+        </div>
+
+        <button type="submit" class="submit-btn" id="submit-btn">
+          Place Order →
+        </button>
+
+      </form>
+
+      <!-- Summary -->
+      <div class="order-summary">
+        <h3>Order Summary</h3>
+        <div class="summary-shop">📍 {{ shop_info.name }} · {{ shop_info.address }}</div>
+        {% for item in cart.items %}
+        <div class="summary-row">
+          <span>{{ item.quantity }}× {{ item.name }}</span>
+          <span>€{{ "%.2f"|format(item.price * item.quantity) }}</span>
+        </div>
+        {% endfor %}
+        <div class="summary-row total">
+          <span>Total</span>
+          <span>€{{ "%.2f"|format(cart_total) }}</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/checkout.js') }}"></script>
+{% endblock %}

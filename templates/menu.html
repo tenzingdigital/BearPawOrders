@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}{{ shop_info.name }} Menu — Bear Paw Café{% endblock %}
+{% block body_attrs %}data-shop="{{ shop }}"{% endblock %}
+
+{% block content %}
+<div class="menu-header">
+  <div class="container">
+    <div class="menu-header-inner">
+      <div>
+        <a href="{{ url_for('index') }}" class="back-link">← All locations</a>
+        <h1>Bear Paw {{ shop_info.name }}</h1>
+        <p>{{ shop_info.address }} &nbsp;·&nbsp; {{ shop_info.phone }}</p>
+      </div>
+      {% if cart_count > 0 %}
+      <a href="{{ url_for('cart_page') }}" class="nav-cart" style="text-decoration:none">
+        🛒 <span class="cart-badge">{{ cart_count }}</span>
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="menu-content">
+  <div class="container">
+
+    {% if cart_shop_conflict %}
+    <div class="conflict-banner" id="conflict-banner">
+      <span class="conflict-banner-text">
+        ⚠️ Your cart has items from <strong>{{ shops[cart.shop].name }}</strong>.
+        Switching shop will clear your current cart.
+      </span>
+      <button class="conflict-clear-btn" id="clear-conflict">Clear cart &amp; continue</button>
+    </div>
+    {% endif %}
+
+    {% for category, items in menu.items() %}
+    <div class="menu-category">
+      <h2 class="category-title">{{ category }}</h2>
+      <div class="menu-items-grid">
+        {% for item in items %}
+        <div class="menu-item-card{% if item.get('popular') %} popular{% endif %}">
+          {% if item.get('popular') %}
+          <span class="popular-ribbon">Popular</span>
+          {% endif %}
+          <div class="menu-item-info">
+            <div class="menu-item-name">{{ item.name }}</div>
+            <div class="menu-item-desc">{{ item.description }}</div>
+          </div>
+          <div class="menu-item-right">
+            <span class="menu-item-price">€{{ "%.2f"|format(item.price) }}</span>
+            <button class="add-btn"
+                    data-item-id="{{ item.id }}"
+                    data-name="{{ item.name }}">Add to cart</button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <span>✓</span><span class="toast-msg"></span>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/menu.js') }}"></script>
+{% endblock %}

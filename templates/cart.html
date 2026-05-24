@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block title %}Your Cart — Bear Paw Café{% endblock %}
+
+{% block content %}
+<div style="background:var(--navy);padding:28px 0">
+  <div class="container">
+    <h1 style="color:#fff;font-size:1.6rem;font-weight:700">Your Cart</h1>
+    {% if shop_info %}
+    <p style="color:rgba(255,255,255,.55);font-size:.88rem;margin-top:4px">
+      Bear Paw {{ shop_info.name }}
+    </p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="cart-content">
+  <div class="container">
+    {% if not cart.items %}
+    <div class="cart-empty-state">
+      <span class="cart-empty-icon">🛒</span>
+      <h2>Your cart is empty</h2>
+      <p>Add some sandwiches from one of our locations to get started.</p>
+      <a href="{{ url_for('index') }}" class="btn-primary">Browse Menu</a>
+    </div>
+    {% else %}
+    <div class="cart-layout">
+
+      <!-- Items -->
+      <div class="cart-items">
+        {% for item in cart.items %}
+        <div class="cart-item" data-index="{{ loop.index0 }}">
+          <div class="cart-item-info">
+            <div class="cart-item-name">{{ item.name }}</div>
+            <div class="cart-item-cat">{{ item.category }}</div>
+            {% if item.notes %}
+            <div class="cart-item-note">{{ item.notes }}</div>
+            {% endif %}
+          </div>
+          <div class="qty-controls">
+            <button class="qty-btn qty-minus" data-index="{{ loop.index0 }}">−</button>
+            <span class="qty-display" data-index="{{ loop.index0 }}">{{ item.quantity }}</span>
+            <button class="qty-btn qty-plus"  data-index="{{ loop.index0 }}">+</button>
+          </div>
+          <span class="cart-item-price"
+                data-index="{{ loop.index0 }}"
+                data-unit="{{ item.price }}">
+            €{{ "%.2f"|format(item.price * item.quantity) }}
+          </span>
+          <button class="remove-btn remove-item" data-index="{{ loop.index0 }}" title="Remove">✕</button>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Summary -->
+      <div class="order-summary">
+        <h3>Order Summary</h3>
+        {% if shop_info %}
+        <div class="summary-shop">📍 {{ shop_info.name }} · {{ shop_info.address }}</div>
+        {% endif %}
+
+        {% for item in cart.items %}
+        <div class="summary-row">
+          <span>{{ item.quantity }}× {{ item.name }}</span>
+          <span>€{{ "%.2f"|format(item.price * item.quantity) }}</span>
+        </div>
+        {% endfor %}
+
+        <div class="summary-row total">
+          <span>Total</span>
+          <span id="cart-total">€{{ "%.2f"|format(cart_total) }}</span>
+        </div>
+
+        <a href="{{ url_for('checkout') }}" class="checkout-btn">Checkout →</a>
+        <a href="{{ url_for('menu', shop=cart.shop) }}"
+           style="display:block;text-align:center;margin-top:12px;font-size:.85rem;color:var(--warm-gray)">
+          ← Continue shopping
+        </a>
+      </div>
+
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if cart.items %}
+<script src="{{ url_for('static', filename='js/cart.js') }}"></script>
+{% endif %}
+{% endblock %}

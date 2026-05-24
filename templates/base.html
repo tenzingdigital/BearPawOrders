@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Bear Paw Café{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body {% block body_attrs %}{% endblock %}>
+
+<header class="header">
+  <div class="container">
+    <a href="{{ url_for('index') }}" class="logo">
+      <span class="logo-icon">🐾</span>
+      <span class="logo-text">Bear Paw</span>
+    </a>
+    <nav class="nav">
+      {% if cart_count > 0 %}
+      <a href="{{ url_for('cart_page') }}" class="nav-cart">
+        <span>🛒</span>
+        <span class="cart-badge">{{ cart_count }}</span>
+      </a>
+      {% endif %}
+    </nav>
+  </div>
+</header>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="flash flash-{{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<main class="main">{% block content %}{% endblock %}</main>
+
+<footer class="footer">
+  <div class="container">
+    <p>© 2024 Bear Paw Café &nbsp;·&nbsp; Delgany &nbsp;·&nbsp; Enniskerry &nbsp;·&nbsp; Greystones</p>
+  </div>
+</footer>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

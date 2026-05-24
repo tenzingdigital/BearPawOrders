@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Order Confirmed — Bear Paw Café{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="confirmation-content">
+
+    <span class="confirmation-icon">✅</span>
+    <h1>Order Confirmed!</h1>
+    <p>Thanks, <strong>{{ order.customer_name }}</strong>! Your sandwich is on its way to being made.</p>
+
+    <div class="order-details-card">
+      <div style="text-align:center">
+        <div class="order-id-badge">#{{ order.id }}</div>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-label">Location</span>
+        <span class="detail-value">Bear Paw {{ shop_info.name }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Pickup Time</span>
+        <span class="detail-value">🕐 {{ order.pickup_time }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Payment</span>
+        <span class="detail-value">
+          {% if order.payment_status == 'paid' %}
+            <span style="color:var(--success)">✓ Paid online</span>
+          {% else %}
+            Pay on collection
+          {% endif %}
+        </span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Status</span>
+        <span class="detail-value">
+          <span class="status-badge status-{{ order.status }}">{{ order.status | capitalize }}</span>
+        </span>
+      </div>
+
+      <div style="margin-top:16px">
+        <p style="font-size:.82rem;color:var(--warm-gray);margin-bottom:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px">
+          Your order
+        </p>
+        <ul class="items-list">
+          {% for item in order.items %}
+          <li>
+            <span>{{ item.quantity }}× {{ item.item_name }}
+              {% if item.notes %}<em style="color:var(--warm-gray)"> · {{ item.notes }}</em>{% endif %}
+            </span>
+            <span>€{{ "%.2f"|format(item.price * item.quantity) }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        <div style="display:flex;justify-content:space-between;font-weight:700;font-size:1rem;margin-top:12px;padding-top:12px;border-top:2px solid var(--light-gray)">
+          <span>Total</span>
+          <span>€{{ "%.2f"|format(order.total) }}</span>
+        </div>
+      </div>
+
+      {% if order.notes %}
+      <div style="margin-top:16px;padding:12px;background:var(--cream);border-radius:var(--radius-sm);font-size:.85rem;color:var(--warm-gray)">
+        📝 {{ order.notes }}
+      </div>
+      {% endif %}
+    </div>
+
+    <p style="font-size:.88rem;color:var(--warm-gray);margin-bottom:28px;line-height:1.6">
+      A confirmation has been noted for <strong>{{ order.customer_email }}</strong>.
+      Head to <strong>Bear Paw {{ shop_info.name }}</strong> at your pickup time and quote your order number above.
+    </p>
+
+    <a href="{{ url_for('index') }}" class="btn-primary">Order Again →</a>
+
+  </div>
+</div>
+{% endblock %}

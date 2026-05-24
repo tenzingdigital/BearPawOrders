@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Bear Paw {{ shop_info.name }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body data-shop="{{ shop }}">
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="flash flash-{{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<header class="admin-header">
+  <div class="container">
+    <div class="admin-brand">
+      <span class="logo-icon">🐾</span>
+      <span class="admin-shop-name">Bear Paw <span>{{ shop_info.name }}</span></span>
+    </div>
+    <nav class="admin-nav">
+      <a href="{{ url_for('index') }}">Customer Site</a>
+      <a href="{{ url_for('admin_logout') }}">Log out</a>
+    </nav>
+  </div>
+</header>
+
+<div class="dashboard-content">
+  <div class="container">
+
+    <!-- Stats -->
+    <div class="dashboard-stats">
+      <div class="stat-card">
+        <div class="stat-number" id="stat-total">{{ orders | length }}</div>
+        <div class="stat-label">Today's Orders</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="stat-received" style="color:#1d4ed8">
+          {{ orders | selectattr('status', 'equalto', 'received') | list | length }}
+        </div>
+        <div class="stat-label">Received</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="stat-preparing" style="color:#d97706">
+          {{ orders | selectattr('status', 'equalto', 'preparing') | list | length }}
+        </div>
+        <div class="stat-label">Preparing</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="stat-ready" style="color:#065f46">
+          {{ orders | selectattr('status', 'equalto', 'ready') | list | length }}
+        </div>
+        <div class="stat-label">Ready</div>
+      </div>
+    </div>
+
+    <!-- Orders -->
+    <div class="orders-section">
+      <h2>
+        <span class="live-dot"></span>
+        Live Orders
+        <span style="font-weight:400;font-size:.85rem;color:var(--warm-gray);margin-left:4px">
+          — today, {{ shop_info.name }}
+        </span>
+      </h2>
+
+      <div id="orders-list">
+        {% if not orders %}
+        <div class="no-orders" id="no-orders">
+          <span class="no-orders-icon">☕</span>
+          <p>No orders yet today. New orders will appear here in real time.</p>
+        </div>
+        {% else %}
+        {% for order in orders %}
+        <div class="order-card" data-order-id="{{ order.id }}" data-status="{{ order.status }}">
+          <div class="order-card-header">
+            <div class="order-meta">
+              <span class="order-id">#{{ order.id }}</span>
+              <span class="status-badge status-{{ order.status }}">{{ order.status | capitalize }}</span>
+            </div>
+            <span class="order-time">{{ order.created_at.strftime('%H:%M') }}</span>
+          </div>
+
+          <div class="order-customer">{{ order.customer_name }}</div>
+          <div class="order-pickup">
+            🕐 Pickup: {{ order.pickup_time }}
+            &nbsp;·&nbsp;
+            {{ order.customer_phone or order.customer_email }}
+          </div>
+
+          <ul class="order-items-list">
+            {% for item in order.items %}
+            <li>
+              <span>{{ item.quantity }}× {{ item.item_name }}
+                {% if item.notes %}<em style="color:var(--warm-gray)"> · {{ item.notes }}</em>{% endif %}
+              </span>
+              <span>€{{ "%.2f"|format(item.price * item.quantity) }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+
+          {% if order.notes %}
+          <p style="font-size:.82rem;color:var(--warm-gray);margin-bottom:10px">📝 {{ order.notes }}</p>
+          {% endif %}
+
+          <div class="order-footer">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="order-total">€{{ "%.2f"|format(order.total) }}</span>
+              <span class="payment-badge {{ 'payment-paid' if order.payment_status == 'paid' else 'payment-pending' }}">
+                {{ '✓ Paid online' if order.payment_status == 'paid' else 'Pay on collection' }}
+              </span>
+            </div>
+            <div class="status-buttons">
+              {% for s in ['received','preparing','ready','collected'] %}
+              <button class="status-btn {{ 'active' if order.status == s }}"
+                      data-status="{{ s }}"
+                      data-order-id="{{ order.id }}">
+                {{ s | capitalize }}
+              </button>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Admin — Bear Paw {{ shop_info.name }}{% endblock %}
+
+{% block content %}
+<div class="admin-login-page">
+  <div class="admin-login-card">
+    <span class="admin-login-icon">🔐</span>
+    <h1>Bear Paw {{ shop_info.name }}</h1>
+    <p class="sub">Admin dashboard · Staff only</p>
+
+    <form method="POST" action="{{ url_for('admin_login_post', shop=shop) }}">
+      <div class="form-group" style="text-align:left">
+        <label>Password</label>
+        <input class="form-control" type="password" name="password"
+               placeholder="Enter admin password" autofocus required>
+      </div>
+      <button type="submit" class="submit-btn" style="margin-top:8px">
+        Sign In →
+      </button>
+    </form>
+
+    <p style="margin-top:24px;font-size:.8rem;color:var(--warm-gray)">
+      <a href="{{ url_for('index') }}" style="color:var(--warm-gray)">← Customer ordering</a>
+    </p>
+  </div>
+</div>
+{% endblock %}
