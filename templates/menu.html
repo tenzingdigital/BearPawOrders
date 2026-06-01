@@ -54,12 +54,14 @@
                   {% endif %}
                 {% endif %}
               </div>
-              {% if item.allergens and item.allergens | length > 0 %}
+              {% if item.allergens is iterable and item.allergens is not string and item.allergens | length > 0 %}
               <div class="allergen-line">
                 Contains: {{ item.allergens | map('string') | map('lower') | join(', ') }}
                 &nbsp;<span title="{{ item.allergens | map('string') | map(attribute=allergen_key.__getitem__) | join(', ') }}"
                             style="cursor:help;text-decoration:underline dotted">allergen info</span>
               </div>
+              {% elif item.allergens is string and item.allergens %}
+              <div class="allergen-line">Allergens: {{ item.allergens }}</div>
               {% endif %}
             </div>
             <div class="menu-item-right">
