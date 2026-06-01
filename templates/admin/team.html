@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team — Bear Paw {{ shop_info.name }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body data-shop="{{ shop }}">
+
+<header class="admin-header">
+  <div class="container">
+    <div class="admin-brand">
+      <span class="logo-icon">🐾</span>
+      <span class="admin-shop-name">Bear Paw <span>{{ shop_info.name }}</span></span>
+    </div>
+    <nav class="admin-nav">
+      <a href="{{ url_for('admin_dashboard', shop=shop) }}">Orders</a>
+      <a href="{{ url_for('admin_team', shop=shop) }}" style="color:var(--white)">Team</a>
+      <a href="{{ url_for('index') }}">Customer Site</a>
+      <a href="{{ url_for('admin_logout') }}">Log out</a>
+    </nav>
+  </div>
+</header>
+
+<div class="dashboard-content">
+  <div class="container">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px">
+      <div>
+        <h1 style="font-family:var(--font-serif);font-size:1.6rem;font-weight:700;color:var(--dark)">Your Team</h1>
+        <p style="font-size:.85rem;color:var(--mid);margin-top:4px">{{ shop_info.name }} · {{ staff|length }} member{{ 's' if staff|length != 1 }}</p>
+      </div>
+      <button class="submit-btn" style="width:auto;padding:11px 24px;margin:0" id="open-modal">
+        + Add team member
+      </button>
+    </div>
+
+    <!-- Staff table -->
+    {% if staff %}
+    <div style="background:var(--white);border:1px solid var(--parchment);overflow:hidden">
+      <table style="width:100%;border-collapse:collapse;font-size:.88rem" id="staff-table">
+        <thead>
+          <tr style="border-bottom:1.5px solid var(--parchment);text-align:left">
+            <th style="padding:12px 20px;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mid);font-weight:500">Name</th>
+            <th style="padding:12px 20px;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mid);font-weight:500">Email</th>
+            <th style="padding:12px 20px;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mid);font-weight:500">Role</th>
+            <th style="padding:12px 20px;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mid);font-weight:500">Status</th>
+            <th style="padding:12px 20px;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mid);font-weight:500">Added</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in staff %}
+          <tr style="border-bottom:1px solid var(--parchment)" class="staff-row">
+            <td style="padding:14px 20px;font-weight:600;color:var(--dark)">{{ s.name }}</td>
+            <td style="padding:14px 20px;color:var(--mid)">{{ s.email or '—' }}</td>
+            <td style="padding:14px 20px">
+              <span style="font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+                           padding:2px 10px;
+                           background:{{ '#f5f0e0' if s.role == 'manager' else 'var(--parchment)' }};
+                           color:{{ '#7a5a10' if s.role == 'manager' else 'var(--mid)' }}">
+                {{ s.role | capitalize }}
+              </span>
+            </td>
+            <td style="padding:14px 20px">
+              <span style="font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+                           padding:2px 10px;
+                           background:{{ '#e8f0e8' if s.status == 'active' else '#ebebeb' }};
+                           color:{{ '#2a5a2a' if s.status == 'active' else '#5a5a5a' }}">
+                {{ s.status | capitalize }}
+              </span>
+            </td>
+            <td style="padding:14px 20px;color:var(--mid)">{{ s.created_at.strftime('%d %b %Y') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="no-orders" id="empty-state">
+      <span class="no-orders-icon">👥</span>
+      <p>No team members yet. Add your first team member to get started.</p>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<!-- ── Modal ── -->
+<div class="modal-overlay" id="modal" style="display:none">
+  <div class="modal-box">
+    <button class="modal-close" id="close-modal" aria-label="Close">✕</button>
+    <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:700;text-align:center;margin-bottom:6px">
+      Bring your team to Bear Paw
+    </h2>
+    <p style="text-align:center;font-size:.85rem;color:var(--mid);margin-bottom:4px">
+      Invite your team to view their schedules and get the app.<br>How would you like to start?
+    </p>
+
+    <div class="option-cards">
+
+      <!-- 1. Join link -->
+      <div class="option-card" id="card-link">
+        <div class="option-card-icon">🔗</div>
+        <div class="option-card-body">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span class="option-card-title">Send your team a join link</span>
+            <span class="recommended-badge">Recommended</span>
+          </div>
+          <div class="option-card-desc">Copy and share this link via text, email, or any messaging app.</div>
+          <div id="link-area" style="display:none;margin-top:12px">
+            <div class="join-link-box">
+              <span id="join-link-text" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;margin-right:10px;color:var(--mid)"></span>
+              <button class="status-btn active" style="opacity:1;white-space:nowrap" id="copy-btn">Copy link</button>
+            </div>
+            <div style="font-size:.75rem;color:var(--mid);margin-top:6px">This link expires in 30 days.</div>
+          </div>
+        </div>
+        <button class="submit-btn" style="width:auto;padding:9px 18px;margin:0;white-space:nowrap;flex-shrink:0" id="generate-link-btn">
+          Get link
+        </button>
+      </div>
+
+      <!-- 2. Import from file -->
+      <div class="option-card">
+        <div class="option-card-icon">📋</div>
+        <div class="option-card-body">
+          <div class="option-card-title">Import from a file</div>
+          <div class="option-card-desc">Upload a CSV with columns: name, email, role. We'll create your team for you.</div>
+          <div id="import-feedback" style="display:none;font-size:.8rem;margin-top:8px;color:var(--success)"></div>
+        </div>
+        <div style="flex-shrink:0">
+          <input type="file" id="csv-file" accept=".csv" style="display:none">
+          <button class="submit-btn" style="width:auto;padding:9px 18px;margin:0" id="import-btn">Import file</button>
+        </div>
+      </div>
+
+      <!-- 3. Add manually -->
+      <div class="option-card" style="flex-direction:column;align-items:stretch">
+        <div style="display:flex;align-items:center;gap:18px">
+          <div class="option-card-icon">✏️</div>
+          <div class="option-card-body">
+            <div class="option-card-title">Add team manually</div>
+            <div class="option-card-desc">Create your team members from scratch.</div>
+          </div>
+          <button class="submit-btn" style="width:auto;padding:9px 18px;margin:0;flex-shrink:0" id="show-manual-form">
+            Manually add team
+          </button>
+        </div>
+        <form id="manual-form" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--parchment)">
+          <div class="form-row" style="margin-bottom:12px">
+            <div class="form-group" style="margin:0">
+              <label>Name <span class="required">*</span></label>
+              <input class="form-control" type="text" id="m-name" placeholder="Jane Smith">
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Email</label>
+              <input class="form-control" type="email" id="m-email" placeholder="jane@example.com">
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:12px">
+            <label>Role</label>
+            <select class="form-control" id="m-role">
+              <option value="staff">Staff</option>
+              <option value="manager">Manager</option>
+            </select>
+          </div>
+          <button type="submit" class="submit-btn" style="margin:0">Add team member</button>
+          <div id="manual-feedback" style="font-size:.8rem;margin-top:8px;color:var(--danger);display:none"></div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const SHOP = '{{ shop }}';
+
+// ── Modal ──
+const modal     = document.getElementById('modal');
+const openBtn   = document.getElementById('open-modal');
+const closeBtn  = document.getElementById('close-modal');
+openBtn.addEventListener('click', () => modal.style.display = 'flex');
+closeBtn.addEventListener('click', () => modal.style.display = 'none');
+modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
+
+// ── Generate join link ──
+document.getElementById('generate-link-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('generate-link-btn');
+  btn.disabled = true; btn.textContent = '…';
+  const res  = await fetch(`/admin/${SHOP}/team/generate-link`, {method: 'POST'});
+  const data = await res.json();
+  if (data.success) {
+    document.getElementById('join-link-text').textContent = data.url;
+    document.getElementById('link-area').style.display = 'block';
+    btn.textContent = 'Regenerate';
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('copy-btn').addEventListener('click', () => {
+  const url = document.getElementById('join-link-text').textContent;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy link', 2000);
+  });
+});
+
+// ── CSV import ──
+const importBtn  = document.getElementById('import-btn');
+const csvFile    = document.getElementById('csv-file');
+const importFeedback = document.getElementById('import-feedback');
+
+importBtn.addEventListener('click', () => csvFile.click());
+csvFile.addEventListener('change', async () => {
+  if (!csvFile.files.length) return;
+  importBtn.disabled = true; importBtn.textContent = 'Importing…';
+  const form = new FormData();
+  form.append('file', csvFile.files[0]);
+  const res  = await fetch(`/admin/${SHOP}/team/import`, {method: 'POST', body: form});
+  const data = await res.json();
+  importBtn.disabled = false; importBtn.textContent = 'Import file';
+  if (data.success) {
+    importFeedback.style.display = 'block';
+    importFeedback.style.color   = 'var(--success)';
+    importFeedback.textContent   = `✓ ${data.created} member${data.created !== 1 ? 's' : ''} imported${data.skipped ? `, ${data.skipped} skipped` : ''}.`;
+    data.staff.forEach(s => appendStaffRow(s));
+  } else {
+    importFeedback.style.display = 'block';
+    importFeedback.style.color   = 'var(--danger)';
+    importFeedback.textContent   = data.error || 'Import failed.';
+  }
+});
+
+// ── Manual add ──
+document.getElementById('show-manual-form').addEventListener('click', () => {
+  const f = document.getElementById('manual-form');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+});
+
+document.getElementById('manual-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const name  = document.getElementById('m-name').value.trim();
+  const email = document.getElementById('m-email').value.trim();
+  const role  = document.getElementById('m-role').value;
+  const fb    = document.getElementById('manual-feedback');
+  if (!name) { fb.style.display = 'block'; fb.textContent = 'Name is required.'; return; }
+  fb.style.display = 'none';
+
+  const res  = await fetch(`/admin/${SHOP}/team/add`, {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({name, email, role}),
+  });
+  const data = await res.json();
+  if (data.success) {
+    appendStaffRow(data.staff);
+    document.getElementById('m-name').value = '';
+    document.getElementById('m-email').value = '';
+    document.getElementById('manual-form').style.display = 'none';
+    modal.style.display = 'none';
+  } else {
+    fb.style.display = 'block';
+    fb.textContent   = data.error || 'Could not add staff member.';
+  }
+});
+
+// ── Append row to table ──
+function appendStaffRow(s) {
+  const empty = document.getElementById('empty-state');
+  if (empty) empty.remove();
+
+  let tbody = document.querySelector('#staff-table tbody');
+  if (!tbody) {
+    // Build table from scratch if it didn't exist
+    const container = document.querySelector('.container > div:last-child');
+    container.innerHTML = `
+      <div style="background:var(--white);border:1px solid var(--parchment);overflow:hidden">
+        <table style="width:100%;border-collapse:collapse;font-size:.88rem" id="staff-table">
+          <thead><tr style="border-bottom:1.5px solid var(--parchment);text-align:left">
+            <th style="padding:12px 20px;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mid);font-weight:500">Name</th>
+            <th style="padding:12px 20px;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mid);font-weight:500">Email</th>
+            <th style="padding:12px 20px;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mid);font-weight:500">Role</th>
+            <th style="padding:12px 20px;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mid);font-weight:500">Status</th>
+            <th style="padding:12px 20px;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mid);font-weight:500">Added</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>`;
+    tbody = document.querySelector('#staff-table tbody');
+  }
+
+  const roleBg    = s.role === 'manager' ? '#f5f0e0' : 'var(--parchment)';
+  const roleColor = s.role === 'manager' ? '#7a5a10' : 'var(--mid)';
+  const row = document.createElement('tr');
+  row.style.borderBottom = '1px solid var(--parchment)';
+  row.innerHTML = `
+    <td style="padding:14px 20px;font-weight:600;color:var(--dark)">${s.name}</td>
+    <td style="padding:14px 20px;color:var(--mid)">${s.email || '—'}</td>
+    <td style="padding:14px 20px"><span style="font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:2px 10px;background:${roleBg};color:${roleColor}">${s.role.charAt(0).toUpperCase()+s.role.slice(1)}</span></td>
+    <td style="padding:14px 20px"><span style="font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:2px 10px;background:#ebebeb;color:#5a5a5a">Invited</span></td>
+    <td style="padding:14px 20px;color:var(--mid)">${s.created_at}</td>`;
+  tbody.appendChild(row);
+}
+</script>
+</body>
+</html>

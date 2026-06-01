@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Join Bear Paw{% if shop_info %} {{ shop_info.name }}{% endif %}{% endblock %}
+
+{% block content %}
+<div style="min-height:calc(100vh - 64px);display:flex;align-items:center;justify-content:center;padding:40px 20px;background:var(--cream)">
+  <div style="background:var(--white);border:1px solid var(--parchment);box-shadow:var(--shadow-lg);padding:44px 40px;width:100%;max-width:420px;text-align:center">
+
+    <span style="font-size:2.5rem;display:block;margin-bottom:16px">🐾</span>
+
+    {% if error %}
+      <h1 style="font-family:var(--font-serif);font-size:1.4rem;color:var(--dark);font-weight:700;margin-bottom:12px">Invalid Link</h1>
+      <p style="color:var(--mid);font-size:.9rem;margin-bottom:24px">{{ error }}</p>
+      <a href="{{ url_for('index') }}" class="btn-primary">Go to ordering site</a>
+
+    {% elif success %}
+      <h1 style="font-family:var(--font-serif);font-size:1.4rem;color:var(--dark);font-weight:700;margin-bottom:12px">Welcome, {{ staff_name }}!</h1>
+      <p style="color:var(--mid);font-size:.9rem;margin-bottom:8px">
+        You've joined <strong>Bear Paw {{ shop_info.name }}</strong>.<br>
+        Your account is now active.
+      </p>
+      <p style="color:var(--mid);font-size:.82rem;margin-bottom:24px">Use your name and PIN to sign in when prompted.</p>
+      <a href="{{ url_for('index') }}" class="btn-primary">Go to ordering site</a>
+
+    {% else %}
+      <h1 style="font-family:var(--font-serif);font-size:1.4rem;color:var(--dark);font-weight:700;margin-bottom:4px">
+        You've been invited
+      </h1>
+      <p style="color:var(--mid);font-size:.88rem;margin-bottom:28px">
+        Join the team at <strong>Bear Paw {{ shop_info.name }}</strong>
+      </p>
+
+      <form method="POST">
+        <div class="form-group" style="text-align:left;margin-bottom:16px">
+          <label>Your name <span class="required">*</span></label>
+          <input class="form-control" type="text" name="name" placeholder="Jane Smith" required autofocus>
+        </div>
+        <div class="form-group" style="text-align:left;margin-bottom:4px">
+          <label>Set a 4-digit PIN <span class="required">*</span></label>
+          <input class="form-control" type="password" name="pin" placeholder="····"
+                 maxlength="4" pattern="\d{4}" inputmode="numeric" required
+                 style="letter-spacing:.3em;font-size:1.2rem;text-align:center">
+        </div>
+        <p style="font-size:.75rem;color:var(--mid);text-align:left;margin-bottom:20px">You'll use this PIN to sign in at your location.</p>
+
+        {% if error %}
+        <p style="color:var(--danger);font-size:.85rem;margin-bottom:16px">{{ error }}</p>
+        {% endif %}
+
+        <button type="submit" class="submit-btn" style="margin:0">Join the team →</button>
+      </form>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

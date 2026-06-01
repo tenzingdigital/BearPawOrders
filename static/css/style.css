@@ -551,6 +551,49 @@ textarea.form-control{resize:vertical;min-height:80px}
 }
 .page-header p{color:rgba(255,255,255,.55);font-size:.82rem;margin-top:5px}
 
+/* ── Modal ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+}
+.modal-box{
+  background:var(--white);max-width:560px;width:100%;padding:36px;
+  position:relative;max-height:90vh;overflow-y:auto;
+}
+.modal-close{
+  position:absolute;top:14px;right:18px;
+  background:none;border:none;font-size:1.1rem;cursor:pointer;
+  color:var(--mid);transition:color .2s;
+}
+.modal-close:hover{color:var(--dark)}
+
+/* Option cards */
+.option-cards{display:flex;flex-direction:column;gap:14px;margin-top:24px}
+.option-card{
+  border:1.5px solid var(--parchment);padding:20px;
+  display:flex;align-items:center;gap:18px;
+  transition:border-color .2s;
+}
+.option-card:hover{border-color:var(--olive-lt)}
+.option-card-icon{font-size:1.8rem;flex-shrink:0;line-height:1}
+.option-card-body{flex:1;min-width:0}
+.option-card-title{
+  font-family:var(--font-serif);font-weight:700;font-size:.95rem;color:var(--dark);
+}
+.option-card-desc{font-size:.8rem;color:var(--mid);margin-top:3px;line-height:1.45}
+.recommended-badge{
+  background:#e8edf5;color:#2a4a7a;
+  font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  padding:2px 8px;white-space:nowrap;flex-shrink:0;
+}
+
+/* Join link display box */
+.join-link-box{
+  border:1.5px solid var(--parchment);padding:10px 14px;
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:.82rem;margin-top:12px;background:var(--cream);
+}
+
 /* ── Responsive ── */
 @media(max-width:768px){
   .shops-grid        {grid-template-columns:1fr}
