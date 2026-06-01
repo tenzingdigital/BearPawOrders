@@ -1,8 +1,5 @@
-import csv
-import io
 import json
 import os
-import secrets
 import uuid
 from datetime import datetime, timedelta
 from functools import wraps
@@ -10,7 +7,6 @@ from functools import wraps
 from flask import Flask, render_template, request, session, redirect, url_for, jsonify, flash
 from flask_socketio import SocketIO, emit, join_room
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'bearpaw-secret-2024')
@@ -113,25 +109,6 @@ class OrderItem(db.Model):
             'notes':         self.notes,
             'subtotal':      self.price * self.quantity,
         }
-
-
-class Staff(db.Model):
-    id            = db.Column(db.Integer,     primary_key=True)
-    shop          = db.Column(db.String(50),  nullable=False)
-    name          = db.Column(db.String(100), nullable=False)
-    email         = db.Column(db.String(100), nullable=True)
-    role          = db.Column(db.String(20),  default='staff')    # 'manager' | 'staff'
-    pin_hash      = db.Column(db.String(256), nullable=True)
-    status        = db.Column(db.String(20),  default='invited')  # 'invited' | 'active'
-    joined_at     = db.Column(db.DateTime,    nullable=True)
-    created_at    = db.Column(db.DateTime,    default=datetime.utcnow)
-
-
-class ShopInviteLink(db.Model):
-    id      = db.Column(db.Integer,    primary_key=True)
-    shop    = db.Column(db.String(50), unique=True, nullable=False)
-    token   = db.Column(db.String(64), unique=True, nullable=False)
-    expires = db.Column(db.DateTime,   nullable=False)
 
 
 # ── Cart helpers ──────────────────────────────────────────────────────────────
@@ -376,116 +353,6 @@ def update_order_status(order_id):
 def admin_logout():
     session.pop('admin_shop', None)
     return redirect(url_for('index'))
-
-
-# ── Team management routes ────────────────────────────────────────────────────
-
-def _admin_required(shop):
-    return shop in SHOPS and session.get('admin_shop') == shop
-
-
-@app.route('/admin/<shop>/team')
-def admin_team(shop):
-    if not _admin_required(shop):
-        return redirect(url_for('admin_login', shop=shop))
-    staff  = Staff.query.filter_by(shop=shop).order_by(Staff.created_at.desc()).all()
-    invite = ShopInviteLink.query.filter_by(shop=shop).first()
-    return render_template('admin/team.html', shop=shop, shop_info=SHOPS[shop],
-                           staff=staff, invite=invite, cart_count=0)
-
-
-@app.route('/admin/<shop>/team/generate-link', methods=['POST'])
-def team_generate_link(shop):
-    if not _admin_required(shop):
-        return jsonify({'success': False}), 403
-    token   = secrets.token_hex(32)
-    expires = datetime.utcnow() + timedelta(days=30)
-    invite  = ShopInviteLink.query.filter_by(shop=shop).first()
-    if invite:
-        invite.token   = token
-        invite.expires = expires
-    else:
-        db.session.add(ShopInviteLink(shop=shop, token=token, expires=expires))
-    db.session.commit()
-    join_url = request.host_url.rstrip('/') + url_for('join_link', token=token)
-    return jsonify({'success': True, 'url': join_url,
-                    'expires': expires.strftime('%d %b %Y')})
-
-
-@app.route('/admin/<shop>/team/add', methods=['POST'])
-def team_add_staff(shop):
-    if not _admin_required(shop):
-        return jsonify({'success': False}), 403
-    data  = request.get_json()
-    name  = (data.get('name') or '').strip()
-    email = (data.get('email') or '').strip()
-    role  = data.get('role', 'staff')
-    if not name:
-        return jsonify({'success': False, 'error': 'Name is required'}), 400
-    s = Staff(shop=shop, name=name, email=email or None, role=role)
-    db.session.add(s)
-    db.session.commit()
-    return jsonify({'success': True, 'staff': {
-        'id': s.id, 'name': s.name, 'email': s.email or '',
-        'role': s.role, 'status': s.status,
-        'created_at': s.created_at.strftime('%d %b %Y'),
-    }})
-
-
-@app.route('/admin/<shop>/team/import', methods=['POST'])
-def team_import_staff(shop):
-    if not _admin_required(shop):
-        return jsonify({'success': False}), 403
-    file = request.files.get('file')
-    if not file:
-        return jsonify({'success': False, 'error': 'No file uploaded'}), 400
-    text   = file.read().decode('utf-8', errors='ignore')
-    reader = csv.DictReader(io.StringIO(text))
-    created, skipped, added = 0, 0, []
-    for row in reader:
-        name  = (row.get('name') or row.get('Name') or '').strip()
-        email = (row.get('email') or row.get('Email') or '').strip()
-        role  = (row.get('role') or row.get('Role') or 'staff').strip().lower()
-        if role not in ('staff', 'manager'):
-            role = 'staff'
-        if not name:
-            skipped += 1
-            continue
-        s = Staff(shop=shop, name=name, email=email or None, role=role)
-        db.session.add(s)
-        db.session.flush()
-        added.append({'id': s.id, 'name': s.name, 'email': s.email or '',
-                      'role': s.role, 'status': s.status,
-                      'created_at': s.created_at.strftime('%d %b %Y')})
-        created += 1
-    db.session.commit()
-    return jsonify({'success': True, 'created': created, 'skipped': skipped, 'staff': added})
-
-
-# ── Staff join link (public) ──────────────────────────────────────────────────
-
-@app.route('/join/<token>', methods=['GET', 'POST'])
-def join_link(token):
-    invite = ShopInviteLink.query.filter_by(token=token).first()
-    if not invite or invite.expires < datetime.utcnow():
-        return render_template('join.html', error='This invite link has expired or is invalid.',
-                               shop_info=None, invite=None)
-    shop_info = SHOPS.get(invite.shop)
-    if request.method == 'POST':
-        name = request.form.get('name', '').strip()
-        pin  = request.form.get('pin', '').strip()
-        if not name or len(pin) != 4 or not pin.isdigit():
-            return render_template('join.html', shop_info=shop_info, invite=invite,
-                                   error='Please enter your name and a 4-digit PIN.')
-        db.session.add(Staff(
-            shop=invite.shop, name=name, role='staff',
-            pin_hash=generate_password_hash(pin),
-            status='active', joined_at=datetime.utcnow(),
-        ))
-        db.session.commit()
-        return render_template('join.html', shop_info=shop_info, invite=None,
-                               success=True, staff_name=name)
-    return render_template('join.html', shop_info=shop_info, invite=invite)
 
 
 # ── SocketIO ──────────────────────────────────────────────────────────────────
