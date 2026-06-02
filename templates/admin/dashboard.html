@@ -133,25 +133,59 @@
     <!-- Menu / Sold Out -->
     <div class="soldout-section">
       <h2>Menu Items</h2>
-      <p class="soldout-hint">Mark items as sold out to disable them on the customer menu.</p>
+      <p class="soldout-hint">Mark items as sold out (shows greyed out) or remove them from the menu entirely.</p>
       {% for cat in categories %}
         {% if cat.items %}
         <div class="soldout-category">
           <h3>{{ cat.name }}</h3>
           <div class="soldout-items">
             {% for item in cat.items %}
-            <div class="soldout-item{{ ' is-soldout' if item.id in sold_out_ids }}" data-item-id="{{ item.id }}">
-              <span class="soldout-item-name">{{ item.name }}</span>
-              <button class="soldout-toggle-btn{{ ' soldout-active' if item.id in sold_out_ids }}"
-                      data-item-id="{{ item.id }}">
-                {{ 'Back in stock' if item.id in sold_out_ids else 'Mark sold out' }}
-              </button>
+            {% set is_sold_out = item.id in sold_out_ids %}
+            {% set is_hidden   = item.id in hidden_ids %}
+            <div class="soldout-item{{ ' is-soldout' if is_sold_out }}{{ ' is-hidden' if is_hidden }}"
+                 data-item-id="{{ item.id }}">
+              <span class="soldout-item-name">
+                {{ item.name }}
+                {% if is_hidden %}
+                  <span class="item-status-tag tag-hidden">Hidden</span>
+                {% elif is_sold_out %}
+                  <span class="item-status-tag tag-soldout">Sold out</span>
+                {% endif %}
+              </span>
+              <div class="soldout-item-actions">
+                {% if not is_hidden %}
+                <button class="soldout-toggle-btn{{ ' soldout-active' if is_sold_out }}"
+                        data-item-id="{{ item.id }}">
+                  {{ 'Back in stock' if is_sold_out else 'Mark sold out' }}
+                </button>
+                {% endif %}
+                <button class="hide-toggle-btn{{ ' hide-active' if is_hidden }}"
+                        data-item-id="{{ item.id }}">
+                  {{ 'Restore to menu' if is_hidden else 'Remove from menu' }}
+                </button>
+              </div>
             </div>
             {% endfor %}
           </div>
         </div>
         {% endif %}
       {% endfor %}
+    </div>
+
+    <!-- Pickup Times -->
+    <div class="slots-section">
+      <h2>Pickup Times</h2>
+      <p class="soldout-hint">Click a time slot to disable it — customers won't see it as an option.</p>
+      {% if all_slots %}
+      <div class="slots-grid">
+        {% for slot in all_slots %}
+        <button class="slot-btn{{ ' slot-disabled' if slot.disabled }}"
+                data-time="{{ slot.time }}">{{ slot.time }}</button>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p style="color:var(--mid);font-size:.85rem">Shop is closed today — no pickup slots available.</p>
+      {% endif %}
     </div>
 
   </div>

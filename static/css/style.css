@@ -603,9 +603,22 @@ textarea.form-control{resize:vertical;min-height:80px}
   border-radius:var(--radius);
 }
 .soldout-item.is-soldout { background:#fef2f2; border-color:#fecaca; }
-.soldout-item-name { font-size:.9rem; }
+.soldout-item.is-hidden  { background:#f5f3ff; border-color:#c4b5fd; opacity:.7; }
+.soldout-item-name { font-size:.9rem; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .soldout-item.is-soldout .soldout-item-name { color:#991b1b; }
-.soldout-toggle-btn {
+.soldout-item.is-hidden  .soldout-item-name { color:#6d28d9; }
+.soldout-item-actions { display:flex; gap:6px; flex-shrink:0; }
+.item-status-tag {
+  font-size:.6rem;
+  font-weight:700;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  padding:2px 6px;
+  border-radius:2px;
+}
+.tag-soldout { background:#fee2e2; color:#991b1b; }
+.tag-hidden  { background:#ede9fe; color:#6d28d9; }
+.soldout-toggle-btn, .hide-toggle-btn {
   font-size:.75rem;
   font-weight:600;
   padding:5px 12px;
@@ -621,7 +634,45 @@ textarea.form-control{resize:vertical;min-height:80px}
   border-color:#86efac;
   color:#166534;
 }
-.soldout-toggle-btn:hover { opacity:.8; }
+.hide-toggle-btn { border-color:#e2d9f3; }
+.hide-toggle-btn.hide-active {
+  background:#ede9fe;
+  border-color:#c4b5fd;
+  color:#6d28d9;
+}
+.soldout-toggle-btn:hover, .hide-toggle-btn:hover { opacity:.8; }
+
+/* ── Pickup slots admin panel ── */
+.slots-section {
+  margin-top:32px;
+  padding-top:28px;
+  border-top:1.5px solid var(--parchment);
+}
+.slots-section h2 {
+  font-family:var(--font-serif);
+  font-size:1.25rem;
+  font-weight:700;
+  margin-bottom:4px;
+}
+.slots-grid { display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
+.slot-btn {
+  padding:7px 13px;
+  border:1.5px solid var(--parchment);
+  background:var(--white);
+  font-size:.8rem;
+  font-weight:600;
+  cursor:pointer;
+  border-radius:var(--radius-sm);
+  color:var(--dark);
+}
+.slot-btn:hover { background:var(--parchment); }
+.slot-btn.slot-disabled {
+  background:#fef2f2;
+  border-color:#fecaca;
+  color:#991b1b;
+  text-decoration:line-through;
+  opacity:.7;
+}
 
 /* ── Responsive ── */
 @media(max-width:768px){

@@ -148,14 +148,73 @@ document.querySelectorAll('.soldout-toggle-btn').forEach(btn => {
     if (!res.ok) return;
     const data = await res.json();
     const row = btn.closest('.soldout-item');
+    const tag = row.querySelector('.item-status-tag');
     if (data.sold_out) {
       row.classList.add('is-soldout');
       btn.classList.add('soldout-active');
       btn.textContent = 'Back in stock';
+      if (tag) { tag.className = 'item-status-tag tag-soldout'; tag.textContent = 'Sold out'; }
+      else {
+        const nameEl = row.querySelector('.soldout-item-name');
+        nameEl.insertAdjacentHTML('beforeend', '<span class="item-status-tag tag-soldout">Sold out</span>');
+      }
     } else {
       row.classList.remove('is-soldout');
       btn.classList.remove('soldout-active');
       btn.textContent = 'Mark sold out';
+      if (tag) tag.remove();
     }
+  });
+});
+
+// ── Hide (remove from menu) toggles ──────────────────────────────────────────
+
+document.querySelectorAll('.hide-toggle-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const itemId = btn.dataset.itemId;
+    const res = await fetch(`/admin/${SHOP}/hide`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({item_id: itemId}),
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    const row = btn.closest('.soldout-item');
+    const soldoutBtn = row.querySelector('.soldout-toggle-btn');
+    const tag = row.querySelector('.item-status-tag');
+    if (data.hidden) {
+      row.classList.add('is-hidden');
+      row.classList.remove('is-soldout');
+      btn.classList.add('hide-active');
+      btn.textContent = 'Restore to menu';
+      if (soldoutBtn) soldoutBtn.style.display = 'none';
+      if (tag) { tag.className = 'item-status-tag tag-hidden'; tag.textContent = 'Hidden'; }
+      else {
+        const nameEl = row.querySelector('.soldout-item-name');
+        nameEl.insertAdjacentHTML('beforeend', '<span class="item-status-tag tag-hidden">Hidden</span>');
+      }
+    } else {
+      row.classList.remove('is-hidden');
+      btn.classList.remove('hide-active');
+      btn.textContent = 'Remove from menu';
+      if (soldoutBtn) soldoutBtn.style.display = '';
+      if (tag) tag.remove();
+    }
+  });
+});
+
+// ── Pickup slot toggles ───────────────────────────────────────────────────────
+
+document.querySelectorAll('.slot-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const time = btn.dataset.time;
+    const res = await fetch(`/admin/${SHOP}/slots`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({time}),
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    btn.classList.toggle('slot-disabled', data.disabled);
   });
 });

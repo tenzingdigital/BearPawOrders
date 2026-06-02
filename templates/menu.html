@@ -39,6 +39,7 @@
         <h2 class="category-title">{{ cat.name }}</h2>
         <div class="menu-items-grid">
           {% for item in cat.items %}
+          {% if item.id not in hidden_ids %}
           {% set is_sold_out = item.id in sold_out_ids %}
           <div class="menu-item-card{{ ' sold-out' if is_sold_out }}">
             <div class="menu-item-info">
@@ -78,6 +79,7 @@
               </button>
             </div>
           </div>
+          {% endif %}
           {% endfor %}
         </div>
       </div>

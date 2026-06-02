@@ -116,6 +116,16 @@ class SoldOutItem(db.Model):
     item_id = db.Column(db.String(50), primary_key=True)
 
 
+class HiddenItem(db.Model):
+    shop    = db.Column(db.String(50), primary_key=True)
+    item_id = db.Column(db.String(50), primary_key=True)
+
+
+class DisabledSlot(db.Model):
+    shop     = db.Column(db.String(50), primary_key=True)
+    time_str = db.Column(db.String(5),  primary_key=True)
+
+
 # ── Cart helpers ──────────────────────────────────────────────────────────────
 
 def get_cart():
@@ -147,6 +157,7 @@ def menu(shop):
     cart = get_cart()
     conflict = cart['shop'] and cart['shop'] != shop and bool(cart['items'])
     sold_out_ids = {s.item_id for s in SoldOutItem.query.filter_by(shop=shop).all()}
+    hidden_ids   = {h.item_id for h in HiddenItem.query.filter_by(shop=shop).all()}
     return render_template('menu.html',
                            shop=shop, shop_info=SHOPS[shop],
                            categories=MENUS[shop],
@@ -155,6 +166,7 @@ def menu(shop):
                            cart_count=cart_count(cart),
                            cart_shop_conflict=conflict,
                            sold_out_ids=sold_out_ids,
+                           hidden_ids=hidden_ids,
                            shops=SHOPS)
 
 
@@ -260,7 +272,7 @@ def checkout():
             flash('Please fill in all required fields.', 'error')
             return render_template('checkout.html', cart=cart, shop_info=shop_info,
                                    cart_total=cart_total(cart), cart_count=cart_count(cart),
-                                   pickup_options=_pickup_options(), form_data=request.form)
+                                   pickup_options=_shop_pickup_slots(shop), form_data=request.form)
 
         order_id = str(uuid.uuid4())[:8].upper()
         order = Order(
@@ -286,16 +298,53 @@ def checkout():
 
     return render_template('checkout.html', cart=cart, shop_info=shop_info,
                            cart_total=cart_total(cart), cart_count=cart_count(cart),
-                           pickup_options=_pickup_options(), form_data={})
+                           pickup_options=_shop_pickup_slots(shop), form_data={})
 
 
-def _pickup_options():
-    now = datetime.now()
-    options = []
-    for mins in [20, 30, 45, 60, 75, 90]:
-        t = now + timedelta(minutes=mins)
-        options.append({'value': t.strftime('%H:%M'), 'label': f'{t.strftime("%H:%M")}  (~{mins} min)'})
-    return options
+def _slot_times(shop):
+    """All 15-min slots within today's opening hours (pure, no DB)."""
+    today = datetime.now()
+    day = today.strftime('%A').lower()
+    hours_str = SHOPS[shop]['hours'].get(day, 'closed')
+    if hours_str == 'closed':
+        return []
+    open_str, close_str = hours_str.split('-')
+    oh, om = map(int, open_str.split(':'))
+    ch, cm = map(int, close_str.split(':'))
+    open_dt  = today.replace(hour=oh, minute=om, second=0, microsecond=0)
+    close_dt = today.replace(hour=ch, minute=cm, second=0, microsecond=0)
+    # Round open up to next 15-min boundary
+    start = open_dt
+    if start.minute % 15 != 0:
+        start += timedelta(minutes=15 - start.minute % 15)
+        start = start.replace(second=0, microsecond=0)
+    last = close_dt - timedelta(minutes=15)
+    slots, t = [], start
+    while t <= last:
+        slots.append(t.strftime('%H:%M'))
+        t += timedelta(minutes=15)
+    return slots
+
+
+def _shop_pickup_slots(shop):
+    """Enabled slots at least 20 min from now (for customer checkout)."""
+    now      = datetime.now()
+    disabled = {s.time_str for s in DisabledSlot.query.filter_by(shop=shop).all()}
+    cutoff   = now + timedelta(minutes=20)
+    result   = []
+    for ts in _slot_times(shop):
+        if ts in disabled:
+            continue
+        h, m = map(int, ts.split(':'))
+        if now.replace(hour=h, minute=m, second=0, microsecond=0) >= cutoff:
+            result.append({'value': ts, 'label': ts})
+    return result
+
+
+def _all_shop_slots(shop):
+    """All slots for today with disabled state (for admin panel)."""
+    disabled = {s.time_str for s in DisabledSlot.query.filter_by(shop=shop).all()}
+    return [{'time': ts, 'disabled': ts in disabled} for ts in _slot_times(shop)]
 
 
 @app.route('/confirmation/<order_id>')
@@ -339,11 +388,14 @@ def admin_dashboard(shop):
               .filter(Order.shop == shop, db.func.date(Order.created_at) == today)
               .order_by(Order.created_at.desc()).all())
     sold_out_ids = {s.item_id for s in SoldOutItem.query.filter_by(shop=shop).all()}
+    hidden_ids   = {h.item_id for h in HiddenItem.query.filter_by(shop=shop).all()}
     return render_template('admin/dashboard.html',
                            shop=shop, shop_info=SHOPS[shop],
                            orders=orders, cart_count=0,
                            categories=MENUS[shop],
-                           sold_out_ids=sold_out_ids)
+                           sold_out_ids=sold_out_ids,
+                           hidden_ids=hidden_ids,
+                           all_slots=_all_shop_slots(shop))
 
 
 @app.route('/admin/order/<order_id>/status', methods=['POST'])
@@ -360,6 +412,40 @@ def update_order_status(order_id):
     db.session.commit()
     socketio.emit('order_updated', {'order_id': order_id, 'status': new_status}, room=order.shop)
     return jsonify({'success': True, 'status': new_status})
+
+
+@app.route('/admin/<shop>/hide', methods=['POST'])
+def toggle_hidden(shop):
+    if shop not in SHOPS or session.get('admin_shop') != shop:
+        return jsonify({'success': False}), 403
+    item_id = request.get_json().get('item_id')
+    if not item_id:
+        return jsonify({'success': False}), 400
+    existing = HiddenItem.query.filter_by(shop=shop, item_id=item_id).first()
+    if existing:
+        db.session.delete(existing)
+        db.session.commit()
+        return jsonify({'success': True, 'hidden': False})
+    db.session.add(HiddenItem(shop=shop, item_id=item_id))
+    db.session.commit()
+    return jsonify({'success': True, 'hidden': True})
+
+
+@app.route('/admin/<shop>/slots', methods=['POST'])
+def toggle_slot(shop):
+    if shop not in SHOPS or session.get('admin_shop') != shop:
+        return jsonify({'success': False}), 403
+    time_str = request.get_json().get('time')
+    if not time_str:
+        return jsonify({'success': False}), 400
+    existing = DisabledSlot.query.filter_by(shop=shop, time_str=time_str).first()
+    if existing:
+        db.session.delete(existing)
+        db.session.commit()
+        return jsonify({'success': True, 'disabled': False})
+    db.session.add(DisabledSlot(shop=shop, time_str=time_str))
+    db.session.commit()
+    return jsonify({'success': True, 'disabled': True})
 
 
 @app.route('/admin/<shop>/soldout', methods=['POST'])
