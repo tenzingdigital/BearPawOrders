@@ -130,6 +130,30 @@
       </div>
     </div>
 
+    <!-- Menu / Sold Out -->
+    <div class="soldout-section">
+      <h2>Menu Items</h2>
+      <p class="soldout-hint">Mark items as sold out to disable them on the customer menu.</p>
+      {% for cat in categories %}
+        {% if cat.items %}
+        <div class="soldout-category">
+          <h3>{{ cat.name }}</h3>
+          <div class="soldout-items">
+            {% for item in cat.items %}
+            <div class="soldout-item{{ ' is-soldout' if item.id in sold_out_ids }}" data-item-id="{{ item.id }}">
+              <span class="soldout-item-name">{{ item.name }}</span>
+              <button class="soldout-toggle-btn{{ ' soldout-active' if item.id in sold_out_ids }}"
+                      data-item-id="{{ item.id }}">
+                {{ 'Back in stock' if item.id in sold_out_ids else 'Mark sold out' }}
+              </button>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+
   </div>
 </div>
 

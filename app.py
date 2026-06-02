@@ -111,6 +111,11 @@ class OrderItem(db.Model):
         }
 
 
+class SoldOutItem(db.Model):
+    shop    = db.Column(db.String(50), primary_key=True)
+    item_id = db.Column(db.String(50), primary_key=True)
+
+
 # ── Cart helpers ──────────────────────────────────────────────────────────────
 
 def get_cart():
@@ -141,6 +146,7 @@ def menu(shop):
         return redirect(url_for('index'))
     cart = get_cart()
     conflict = cart['shop'] and cart['shop'] != shop and bool(cart['items'])
+    sold_out_ids = {s.item_id for s in SoldOutItem.query.filter_by(shop=shop).all()}
     return render_template('menu.html',
                            shop=shop, shop_info=SHOPS[shop],
                            categories=MENUS[shop],
@@ -148,6 +154,7 @@ def menu(shop):
                            cart=cart,
                            cart_count=cart_count(cart),
                            cart_shop_conflict=conflict,
+                           sold_out_ids=sold_out_ids,
                            shops=SHOPS)
 
 
@@ -164,6 +171,9 @@ def add_to_cart():
     item = get_shop_item(shop, item_id)
     if not item:
         return jsonify({'success': False, 'error': 'Item not found'}), 400
+
+    if SoldOutItem.query.filter_by(shop=shop, item_id=item_id).first():
+        return jsonify({'success': False, 'error': 'Item is currently sold out'}), 400
 
     cart = get_cart()
     if cart['shop'] and cart['shop'] != shop:
@@ -328,9 +338,12 @@ def admin_dashboard(shop):
     orders = (Order.query
               .filter(Order.shop == shop, db.func.date(Order.created_at) == today)
               .order_by(Order.created_at.desc()).all())
+    sold_out_ids = {s.item_id for s in SoldOutItem.query.filter_by(shop=shop).all()}
     return render_template('admin/dashboard.html',
                            shop=shop, shop_info=SHOPS[shop],
-                           orders=orders, cart_count=0)
+                           orders=orders, cart_count=0,
+                           categories=MENUS[shop],
+                           sold_out_ids=sold_out_ids)
 
 
 @app.route('/admin/order/<order_id>/status', methods=['POST'])
@@ -347,6 +360,23 @@ def update_order_status(order_id):
     db.session.commit()
     socketio.emit('order_updated', {'order_id': order_id, 'status': new_status}, room=order.shop)
     return jsonify({'success': True, 'status': new_status})
+
+
+@app.route('/admin/<shop>/soldout', methods=['POST'])
+def toggle_sold_out(shop):
+    if shop not in SHOPS or session.get('admin_shop') != shop:
+        return jsonify({'success': False}), 403
+    item_id = request.get_json().get('item_id')
+    if not item_id:
+        return jsonify({'success': False}), 400
+    existing = SoldOutItem.query.filter_by(shop=shop, item_id=item_id).first()
+    if existing:
+        db.session.delete(existing)
+        db.session.commit()
+        return jsonify({'success': True, 'sold_out': False})
+    db.session.add(SoldOutItem(shop=shop, item_id=item_id))
+    db.session.commit()
+    return jsonify({'success': True, 'sold_out': True})
 
 
 @app.route('/admin/logout')

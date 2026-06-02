@@ -551,6 +551,78 @@ textarea.form-control{resize:vertical;min-height:80px}
 }
 .page-header p{color:rgba(255,255,255,.55);font-size:.82rem;margin-top:5px}
 
+/* ── Sold-out (customer menu) ── */
+.menu-item-card.sold-out { opacity:.55; }
+.menu-item-card.sold-out .add-btn-soldout {
+  background:var(--parchment);
+  color:var(--mid);
+  cursor:not-allowed;
+  border-color:var(--parchment);
+}
+.badge-soldout {
+  background:#fee2e2;
+  color:#991b1b;
+  font-size:.65rem;
+  font-weight:700;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  padding:2px 7px;
+  border-radius:2px;
+}
+
+/* ── Sold-out admin panel ── */
+.soldout-section {
+  margin-top:40px;
+  padding-top:32px;
+  border-top:1.5px solid var(--parchment);
+}
+.soldout-section h2 {
+  font-family:var(--font-serif);
+  font-size:1.25rem;
+  font-weight:700;
+  margin-bottom:4px;
+}
+.soldout-hint { font-size:.82rem; color:var(--mid); margin-bottom:20px; }
+.soldout-category { margin-bottom:20px; }
+.soldout-category h3 {
+  font-size:.72rem;
+  font-weight:700;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--mid);
+  margin-bottom:8px;
+}
+.soldout-items { display:flex; flex-direction:column; gap:6px; }
+.soldout-item {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 14px;
+  background:var(--white);
+  border:1.5px solid var(--parchment);
+  border-radius:var(--radius);
+}
+.soldout-item.is-soldout { background:#fef2f2; border-color:#fecaca; }
+.soldout-item-name { font-size:.9rem; }
+.soldout-item.is-soldout .soldout-item-name { color:#991b1b; }
+.soldout-toggle-btn {
+  font-size:.75rem;
+  font-weight:600;
+  padding:5px 12px;
+  border:1.5px solid var(--parchment);
+  background:var(--cream);
+  color:var(--dark);
+  cursor:pointer;
+  border-radius:var(--radius-sm);
+  white-space:nowrap;
+}
+.soldout-toggle-btn.soldout-active {
+  background:#dcfce7;
+  border-color:#86efac;
+  color:#166534;
+}
+.soldout-toggle-btn:hover { opacity:.8; }
+
 /* ── Responsive ── */
 @media(max-width:768px){
   .shops-grid        {grid-template-columns:1fr}

@@ -39,13 +39,17 @@
         <h2 class="category-title">{{ cat.name }}</h2>
         <div class="menu-items-grid">
           {% for item in cat.items %}
-          <div class="menu-item-card">
+          {% set is_sold_out = item.id in sold_out_ids %}
+          <div class="menu-item-card{{ ' sold-out' if is_sold_out }}">
             <div class="menu-item-info">
               <div class="menu-item-name">{{ item.name }}</div>
               {% if item.description %}
               <div class="menu-item-desc">{{ item.description }}</div>
               {% endif %}
               <div class="dietary-badges">
+                {% if is_sold_out %}
+                  <span class="badge badge-soldout">Sold out</span>
+                {% endif %}
                 {% if item.dietary is defined %}
                   {% if 'vegan' in item.dietary %}
                     <span class="badge badge-vegan">Vegan</span>
@@ -66,9 +70,12 @@
             </div>
             <div class="menu-item-right">
               <span class="menu-item-price">€{{ "%.2f"|format(item.price) }}</span>
-              <button class="add-btn"
+              <button class="add-btn{{ ' add-btn-soldout' if is_sold_out }}"
                       data-item-id="{{ item.id }}"
-                      data-name="{{ item.name }}">Add to basket</button>
+                      data-name="{{ item.name }}"
+                      {{ 'disabled' if is_sold_out }}>
+                {{ 'Sold out' if is_sold_out else 'Add to basket' }}
+              </button>
             </div>
           </div>
           {% endfor %}

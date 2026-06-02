@@ -134,3 +134,28 @@ socket.on('order_updated', data => {
 if ('Notification' in window && Notification.permission === 'default') {
   Notification.requestPermission();
 }
+
+// ── Sold-out toggles ─────────────────────────────────────────────────────────
+
+document.querySelectorAll('.soldout-toggle-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const itemId = btn.dataset.itemId;
+    const res = await fetch(`/admin/${SHOP}/soldout`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({item_id: itemId}),
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    const row = btn.closest('.soldout-item');
+    if (data.sold_out) {
+      row.classList.add('is-soldout');
+      btn.classList.add('soldout-active');
+      btn.textContent = 'Back in stock';
+    } else {
+      row.classList.remove('is-soldout');
+      btn.classList.remove('soldout-active');
+      btn.textContent = 'Mark sold out';
+    }
+  });
+});
