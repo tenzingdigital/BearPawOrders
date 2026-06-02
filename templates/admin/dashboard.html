@@ -135,11 +135,11 @@
       <h2>Menu Items</h2>
       <p class="soldout-hint">Mark items as sold out (shows greyed out) or remove them from the menu entirely.</p>
       {% for cat in categories %}
-        {% if cat.items %}
+        {% if cat['items'] %}
         <div class="soldout-category">
           <h3>{{ cat.name }}</h3>
           <div class="soldout-items">
-            {% for item in cat.items %}
+            {% for item in cat['items'] %}
             {% set is_sold_out = item.id in sold_out_ids %}
             {% set is_hidden   = item.id in hidden_ids %}
             <div class="soldout-item{{ ' is-soldout' if is_sold_out }}{{ ' is-hidden' if is_hidden }}"

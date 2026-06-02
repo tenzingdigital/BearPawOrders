@@ -34,11 +34,11 @@
     {% endif %}
 
     {% for cat in categories %}
-      {% if cat.items %}
+      {% if cat['items'] %}
       <div class="menu-category">
         <h2 class="category-title">{{ cat.name }}</h2>
         <div class="menu-items-grid">
-          {% for item in cat.items %}
+          {% for item in cat['items'] %}
           {% if item.id not in hidden_ids %}
           {% set is_sold_out = item.id in sold_out_ids %}
           <div class="menu-item-card{{ ' sold-out' if is_sold_out }}">
@@ -83,10 +83,10 @@
           {% endfor %}
         </div>
       </div>
-      {% elif cat.note %}
+      {% elif cat['note'] %}
       <div class="menu-category">
         <h2 class="category-title">{{ cat.name }}</h2>
-        <div class="drinks-note">☕ {{ cat.note }}</div>
+        <div class="drinks-note">☕ {{ cat['note'] }}</div>
       </div>
       {% endif %}
     {% endfor %}
