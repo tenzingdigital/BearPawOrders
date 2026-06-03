@@ -101,8 +101,26 @@
 <div class="toast" id="toast">
   <span>✓</span><span class="toast-msg"></span>
 </div>
+
+<!-- Chat widget -->
+<button class="chat-fab" id="chat-toggle-btn" aria-label="Open ordering assistant">
+  🐾 Chat &amp; Order
+</button>
+<div class="chat-panel" id="chat-panel" role="dialog" aria-label="Ordering assistant">
+  <div class="chat-panel-header">
+    <span class="chat-panel-title">🐾 Bear Paw Assistant</span>
+    <button class="chat-close-btn" id="chat-close" aria-label="Close">✕</button>
+  </div>
+  <div class="chat-cart-bar" id="chat-cart-summary"></div>
+  <div class="chat-messages" id="chat-messages"></div>
+  <div class="chat-input-area">
+    <input type="text" id="chat-input" placeholder="Ask about the menu or place your order…" autocomplete="off">
+    <button class="chat-send-btn" id="chat-send">Send</button>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 {% endblock %}

@@ -4,6 +4,8 @@ import uuid
 from datetime import datetime, timedelta
 from functools import wraps
 
+import anthropic as _anthropic_lib
+
 from flask import Flask, render_template, request, session, redirect, url_for, jsonify, flash
 from flask_socketio import SocketIO, emit, join_room
 from flask_sqlalchemy import SQLAlchemy
@@ -479,6 +481,188 @@ def on_join_shop(data):
     if shop in SHOPS:
         join_room(shop)
         emit('joined', {'shop': shop})
+
+
+# ── Chat / AI ordering agent ─────────────────────────────────────────────────
+
+_anthropic_client = None
+
+def _get_anthropic():
+    global _anthropic_client
+    if _anthropic_client is None:
+        key = os.environ.get('ANTHROPIC_API_KEY')
+        if key:
+            _anthropic_client = _anthropic_lib.Anthropic(api_key=key)
+    return _anthropic_client
+
+
+def _menu_context(shop):
+    sold_out_ids = {s.item_id for s in SoldOutItem.query.filter_by(shop=shop).all()}
+    hidden_ids   = {h.item_id for h in HiddenItem.query.filter_by(shop=shop).all()}
+    lines = []
+    for cat in MENUS[shop]:
+        visible = [i for i in cat.get('items', []) if i['id'] not in hidden_ids]
+        if not visible:
+            continue
+        lines.append(f"\n### {cat['name']}")
+        for item in visible:
+            status = ' [SOLD OUT — cannot be ordered]' if item['id'] in sold_out_ids else ''
+            desc = f" — {item['description']}" if item.get('description') else ''
+            a = item.get('allergens', [])
+            if isinstance(a, list) and a:
+                allergen_str = ' | Contains: ' + ', '.join(ALLERGEN_KEY.get(str(x), str(x)) for x in a)
+            elif isinstance(a, str) and a:
+                allergen_str = f' | Allergens: {a}'
+            else:
+                allergen_str = ''
+            dietary = (' | ' + ', '.join(item['dietary'])) if item.get('dietary') else ''
+            lines.append(f"- **{item['name']}** — €{item['price']:.2f}{status}{desc}{allergen_str}{dietary} [id:{item['id']}]")
+    return '\n'.join(lines)
+
+
+def _agent_execute_tool(shop, name, inputs):
+    if name == 'add_to_cart':
+        item_id  = inputs.get('item_id', '')
+        quantity = max(1, int(inputs.get('quantity', 1)))
+        notes    = inputs.get('notes', '')
+        if SoldOutItem.query.filter_by(shop=shop, item_id=item_id).first():
+            return 'This item is currently sold out and cannot be added.'
+        item = get_shop_item(shop, item_id)
+        if not item:
+            return f"Item id '{item_id}' not found on the menu."
+        cart = get_cart()
+        if cart['shop'] and cart['shop'] != shop:
+            cart = {'shop': shop, 'items': []}
+        cart['shop'] = shop
+        for ci in cart['items']:
+            if ci['id'] == item_id and ci.get('notes', '') == notes:
+                ci['quantity'] += quantity
+                save_cart(cart)
+                return f"Added {quantity}× {item['name']} (already in cart, now {ci['quantity']} total). Cart total: €{cart_total(cart):.2f}."
+        cart['items'].append({'id': item_id, 'name': item['name'], 'category': item['category'],
+                              'price': item['price'], 'quantity': quantity, 'notes': notes})
+        save_cart(cart)
+        return f"Added {quantity}× {item['name']} @ €{item['price']:.2f} each. Cart total: €{cart_total(cart):.2f} ({cart_count(cart)} items)."
+
+    if name == 'view_cart':
+        cart = get_cart()
+        if not cart['items']:
+            return 'Cart is empty.'
+        rows = [f"{i+1}. {ci['quantity']}× {ci['name']} @ €{ci['price']:.2f}" +
+                (f" (Note: {ci['notes']})" if ci.get('notes') else '')
+                for i, ci in enumerate(cart['items'])]
+        rows.append(f"Total: €{cart_total(cart):.2f}")
+        return '\n'.join(rows)
+
+    if name == 'remove_from_cart':
+        pos  = int(inputs.get('position', 1))
+        cart = get_cart()
+        idx  = pos - 1
+        if 0 <= idx < len(cart['items']):
+            removed = cart['items'].pop(idx)
+            if not cart['items']:
+                cart['shop'] = None
+            save_cart(cart)
+            return f"Removed {removed['name']}. Cart now: {cart_count(cart)} items, €{cart_total(cart):.2f}."
+        return 'Invalid position.'
+
+    return 'Unknown tool.'
+
+
+_AGENT_TOOLS = [
+    {
+        'name': 'add_to_cart',
+        'description': 'Add a menu item to the customer\'s cart. Use the item\'s id from the menu listing.',
+        'input_schema': {
+            'type': 'object',
+            'properties': {
+                'item_id': {'type': 'string', 'description': 'The item id (e.g. "the-goat")'},
+                'quantity': {'type': 'integer', 'description': 'How many to add (default 1)', 'default': 1},
+                'notes': {'type': 'string', 'description': 'Special requests, e.g. "no mayo"', 'default': ''},
+            },
+            'required': ['item_id'],
+        },
+    },
+    {
+        'name': 'view_cart',
+        'description': 'Show the current contents of the customer\'s cart.',
+        'input_schema': {'type': 'object', 'properties': {}},
+    },
+    {
+        'name': 'remove_from_cart',
+        'description': 'Remove an item from the cart by its 1-indexed position (use view_cart first to check positions).',
+        'input_schema': {
+            'type': 'object',
+            'properties': {
+                'position': {'type': 'integer', 'description': 'Position of the item in the cart (1 = first item)'},
+            },
+            'required': ['position'],
+        },
+    },
+]
+
+
+@app.route('/chat/<shop>', methods=['POST'])
+def chat(shop):
+    if shop not in SHOPS:
+        return jsonify({'error': 'Invalid shop'}), 400
+
+    client = _get_anthropic()
+    if not client:
+        return jsonify({'reply': "The ordering assistant isn't set up yet — please order using the menu below!", 'cart_count': cart_count(get_cart()), 'cart_total': cart_total(get_cart())})
+
+    data     = request.get_json()
+    messages = list(data.get('messages', []))
+    if not messages:
+        return jsonify({'error': 'No messages'}), 400
+
+    si = SHOPS[shop]
+    slots_text = ', '.join(s['value'] for s in _shop_pickup_slots(shop)) or 'No slots currently available'
+
+    system = f"""You are a friendly ordering assistant for Bear Paw {si['name']}, a beloved deli at {si['address']}.
+
+Help customers browse the menu, answer questions about ingredients and allergens, and build their order using the provided tools. Be warm, concise and helpful. Don't write long lists unprompted — answer what was asked.
+
+RULES:
+- Never add a [SOLD OUT] item to the cart.
+- Confirm each item added and show the running total.
+- When the customer is done, tell them to click the basket / go to /checkout to complete their order.
+- Keep replies short (2-4 sentences max unless listing menu items).
+
+Available pickup times today: {slots_text}
+
+MENU — {si['name']}:
+{_menu_context(shop)}
+"""
+
+    current = list(messages)
+    for _ in range(6):
+        response = client.messages.create(
+            model='claude-haiku-4-5-20251001',
+            max_tokens=512,
+            system=system,
+            tools=_AGENT_TOOLS,
+            messages=current,
+        )
+
+        if response.stop_reason == 'end_turn':
+            text = next((b.text for b in response.content if hasattr(b, 'text')), '')
+            cart = get_cart()
+            return jsonify({'reply': text, 'cart_count': cart_count(cart), 'cart_total': cart_total(cart)})
+
+        if response.stop_reason == 'tool_use':
+            current.append({'role': 'assistant', 'content': response.content})
+            results = [
+                {'type': 'tool_result', 'tool_use_id': b.id,
+                 'content': _agent_execute_tool(shop, b.name, b.input)}
+                for b in response.content if b.type == 'tool_use'
+            ]
+            current.append({'role': 'user', 'content': results})
+        else:
+            break
+
+    cart = get_cart()
+    return jsonify({'reply': "Sorry, I couldn't process that — please try again.", 'cart_count': cart_count(cart), 'cart_total': cart_total(cart)})
 
 
 # ── Bootstrap ─────────────────────────────────────────────────────────────────
